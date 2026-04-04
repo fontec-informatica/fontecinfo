@@ -398,19 +398,24 @@
     }
 
     /* ── CLIENTS ── */
-    #clientes { background: var(--bg2); }
+    #clientes {
+      background: var(--bg2);
+      padding-left: 0;
+      padding-right: 0;
+    }
+    #clientes .section-inner { padding: 0 5%; }
     .clients-marquee {
       overflow: hidden;
       position: relative;
-      padding: 8px 0;
-      margin: 0 -5%;
+      padding: 12px 0;
+      width: 100%;
     }
     .clients-marquee::before,
     .clients-marquee::after {
       content: '';
       position: absolute;
       top: 0; bottom: 0;
-      width: 80px;
+      width: 60px;
       z-index: 2;
       pointer-events: none;
     }
@@ -424,8 +429,9 @@
     }
     .clients-track {
       display: flex;
-      gap: 16px;
+      gap: 14px;
       width: max-content;
+      will-change: transform;
       animation: marqueeScroll 35s linear infinite;
     }
     .clients-track:hover { animation-play-state: paused; }
@@ -437,10 +443,10 @@
       background: var(--surface);
       border: 1px solid var(--border);
       border-radius: var(--radius);
-      width: 160px;
-      height: 100px;
+      width: 150px;
+      height: 90px;
       display: flex; align-items: center; justify-content: center;
-      padding: 20px;
+      padding: 18px;
       flex-shrink: 0;
       transition: border-color var(--trans), box-shadow var(--trans);
     }
@@ -983,9 +989,9 @@
         <h2 class="section-title reveal reveal-delay-1">Empresas e locais que confiam<br>na FONTEC</h2>
         <p class="section-sub reveal reveal-delay-2">Presentes no DAIA Anápolis e em toda a região, atendemos empresas e instituições com soluções completas em TI, redes e segurança eletrônica.</p>
       </div>
-      <div class="clients-marquee">
-        <div class="clients-track" id="clientsTrack"></div>
-      </div>
+    </div>
+    <div class="clients-marquee">
+      <div class="clients-track" id="clientsTrack"></div>
     </div>
   </section>
 
