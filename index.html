@@ -130,6 +130,7 @@
       width: 36px; height: 36px;
       border-radius: 50%;
       border: 1px solid var(--border);
+      background: var(--surface);
       display: flex; align-items: center; justify-content: center;
       color: var(--muted);
       transition: all var(--trans);
@@ -146,7 +147,7 @@
       width: 36px; height: 36px;
       border-radius: 50%;
       border: 1px solid var(--border);
-      background: transparent;
+      background: var(--surface);
       cursor: pointer;
       display: flex; align-items: center; justify-content: center;
       color: var(--muted);
@@ -675,7 +676,14 @@
         gap: 24px;
         z-index: 99;
       }
-      nav.open a { font-size: 1.2rem; }
+      nav.open a {
+        font-size: 1.2rem;
+        color: var(--text);
+        padding-bottom: 16px;
+        border-bottom: 1px solid var(--border);
+        width: 100%;
+      }
+      nav.open a:last-child { border-bottom: none; }
       .menu-toggle { display: flex; }
       .about-grid { grid-template-columns: 1fr; }
       .about-image { order: -1; }
