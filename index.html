@@ -57,7 +57,7 @@
       overflow-x: hidden;
     }
     img { max-width: 100%; display: block; }
-    .logo img { display: inline-block; height: 62px; width: auto; object-fit: contain; }
+    .logo img { display: inline-block; height: 44px; width: auto; object-fit: contain; }
     a { text-decoration: none; color: inherit; }
 
 
@@ -454,21 +454,34 @@
       border-color: var(--accent);
       box-shadow: var(--shadow);
     }
-    @keyframes autoGlow {
-      0%, 65%, 100% { filter: grayscale(1) opacity(.55); }
-      72%, 93%      { filter: grayscale(0) opacity(1); }
+    @keyframes logoPop {
+      0%   { transform: scale(1); }
+      40%  { transform: scale(1.12); }
+      70%  { transform: scale(1.06); }
+      100% { transform: scale(1); }
+    }
+    .client-logo {
+      transition: border-color var(--trans), box-shadow var(--trans), transform var(--trans);
     }
     .client-logo img {
       width: 100%;
       height: 62px;
       object-fit: contain;
       display: block;
-      animation: autoGlow 9s ease-in-out infinite;
+      filter: grayscale(1) opacity(.45);
+      transition: filter .5s ease;
     }
-    .client-logo:hover img,
+    .client-logo.highlight {
+      border-color: var(--accent);
+      box-shadow: 0 0 24px rgba(26,107,66,.2);
+      animation: logoPop .5s cubic-bezier(.4,0,.2,1) forwards;
+      z-index: 2;
+    }
+    .client-logo.highlight img {
+      filter: grayscale(0) opacity(1);
+    }
     .client-logo.lit img {
-      filter: grayscale(0) opacity(1) !important;
-      animation-play-state: paused;
+      filter: grayscale(0) opacity(1);
     }
 
     /* ── ABOUT (FUNDADOR) ── */
@@ -773,7 +786,7 @@
         border-color: var(--accent);
       }
       .menu-toggle { display: flex; }
-      .logo img { height: 54px; }
+      .logo img { height: 40px; }
       .about-grid { grid-template-columns: 1fr; }
       .about-image { order: -1; }
       .about-tag { left: 12px; bottom: 12px; }
@@ -1018,7 +1031,7 @@
   <footer>
     <div class="footer-grid">
         <div class="footer-brand">
-          <img src="assets/img/logo.png" alt="FONTEC" style="height:80px; width:auto; display:block; object-fit:contain; margin-bottom:12px;" />
+          <img src="assets/img/logo.png" alt="FONTEC" style="height:60px; width:auto; display:block; object-fit:contain; margin-bottom:12px;" />
           <p>Soluções completas em TI para empresas e residências em Anápolis, Goiás e região.</p>
         </div>
       <div class="footer-col">
@@ -1082,18 +1095,35 @@
       ];
       const shuffled = logos.slice().sort(() => Math.random() - 0.5);
       const track = document.getElementById('clientsTrack');
-      [...shuffled, ...shuffled].forEach(({ src, alt }, i) => {
+      [...shuffled, ...shuffled].forEach(({ src, alt }) => {
         const div = document.createElement('div');
         div.className = 'client-logo';
         const img = document.createElement('img');
         img.src = src;
         img.alt = alt;
-        img.style.animationDelay = `-${(i * 9 / shuffled.length % 9).toFixed(2)}s`;
         div.appendChild(img);
         track.appendChild(div);
       });
 
-      /* Click: pausa o carrossel 1.5s e destaca a logo clicada */
+      /* Highlight: um por um conforme passa pelo centro */
+      const marquee = document.querySelector('.clients-marquee');
+      const highlightObserver = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+          if (entry.isIntersecting) {
+            entry.target.classList.add('highlight');
+          } else {
+            entry.target.classList.remove('highlight');
+            entry.target.style.animation = '';
+          }
+        });
+      }, {
+        root: marquee,
+        rootMargin: '0px -38% 0px -38%',
+        threshold: 0.1
+      });
+      document.querySelectorAll('.client-logo').forEach(el => highlightObserver.observe(el));
+
+      /* Click: pausa carrossel 1.5s e mantém logo colorida */
       track.addEventListener('click', (e) => {
         const card = e.target.closest('.client-logo');
         if (!card) return;
