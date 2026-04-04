@@ -666,24 +666,65 @@
       40%       { transform: translateY(-6px); }
       60%       { transform: translateY(2px);  }
     }
+    @keyframes floatIn {
+      from { opacity: 0; transform: translateY(-10px) scale(.95); }
+      to   { opacity: 1; transform: translateY(0) scale(1); }
+    }
     @media (max-width: 768px) {
       nav { display: none; }
       nav.open {
         display: flex; flex-direction: column;
-        position: fixed; inset: 70px 0 0 0;
-        background: var(--bg);
-        padding: 32px 5%;
-        gap: 24px;
+        position: absolute;
+        top: calc(100% + 10px);
+        right: 16px;
+        left: auto;
+        width: auto;
+        min-width: 190px;
+        gap: 6px;
+        background: var(--surface);
+        padding: 10px;
+        border-radius: var(--radius);
+        border: 1px solid var(--border);
+        box-shadow: 0 8px 36px rgba(0,0,0,.18), 0 2px 8px rgba(0,0,0,.08);
+        backdrop-filter: blur(20px);
+        -webkit-backdrop-filter: blur(20px);
         z-index: 99;
+        animation: floatIn .22s cubic-bezier(.4,0,.2,1) forwards;
+      }
+      nav.open::before {
+        content: '';
+        position: absolute;
+        top: -9px; right: 13px;
+        border-left: 9px solid transparent;
+        border-right: 9px solid transparent;
+        border-bottom: 9px solid var(--border);
+      }
+      nav.open::after {
+        content: '';
+        position: absolute;
+        top: -7px; right: 14px;
+        border-left: 8px solid transparent;
+        border-right: 8px solid transparent;
+        border-bottom: 8px solid var(--surface);
       }
       nav.open a {
-        font-size: 1.2rem;
+        display: block;
+        padding: 10px 20px;
+        border-radius: 100px;
         color: var(--text);
-        padding-bottom: 16px;
-        border-bottom: 1px solid var(--border);
-        width: 100%;
+        font-size: .95rem;
+        font-weight: 500;
+        background: var(--bg);
+        border: 1px solid var(--border);
+        white-space: nowrap;
+        text-align: center;
+        transition: background var(--trans), color var(--trans), border-color var(--trans);
       }
-      nav.open a:last-child { border-bottom: none; }
+      nav.open a:hover, nav.open a:focus {
+        background: var(--accent);
+        color: #fff;
+        border-color: var(--accent);
+      }
       .menu-toggle { display: flex; }
       .about-grid { grid-template-columns: 1fr; }
       .about-image { order: -1; }
