@@ -57,7 +57,7 @@
       overflow-x: hidden;
     }
     img { max-width: 100%; display: block; }
-    .logo img { display: inline-block; height: 44px; width: auto; object-fit: contain; }
+    .logo img { display: inline-block; height: 52px; width: auto; object-fit: contain; max-width: 160px; }
     a { text-decoration: none; color: inherit; }
 
 
@@ -455,9 +455,12 @@
       box-shadow: var(--shadow);
     }
     .client-logo img {
-      width: 100%;
-      height: 100%;
+      max-width: 110px;
+      max-height: 55px;
+      width: auto;
+      height: auto;
       object-fit: contain;
+      display: block;
       filter: grayscale(1) opacity(.55);
       transition: filter var(--trans);
     }
@@ -767,6 +770,7 @@
         border-color: var(--accent);
       }
       .menu-toggle { display: flex; }
+      .logo img { height: 48px; max-width: 140px; }
       .about-grid { grid-template-columns: 1fr; }
       .about-image { order: -1; }
       .about-tag { left: 12px; bottom: 12px; }
@@ -1078,7 +1082,7 @@
       [...shuffled, ...shuffled].forEach(({ src, alt }) => {
         const div = document.createElement('div');
         div.className = 'client-logo';
-        div.innerHTML = `<img src="${src}" alt="${alt}" loading="lazy" />`;
+        div.innerHTML = `<img src="${src}" alt="${alt}" />`;
         track.appendChild(div);
       });
     })();
