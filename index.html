@@ -401,27 +401,41 @@
     #clientes { background: var(--bg2); }
     .clients-grid {
       display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+      grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
       gap: 16px;
     }
     .client-card {
       background: var(--surface);
       border: 1px solid var(--border);
       border-radius: var(--radius);
-      height: 90px;
+      height: 100px;
+      padding: 16px;
       display: flex; align-items: center; justify-content: center;
       font-family: 'Syne', sans-serif;
-      font-size: .85rem;
+      font-size: .8rem;
       font-weight: 700;
       color: var(--muted);
       transition: all var(--trans);
       letter-spacing: .04em;
+      text-align: center;
+    }
+    .client-card img {
+      max-width: 100%;
+      max-height: 60px;
+      width: auto;
+      height: auto;
+      object-fit: contain;
+      filter: grayscale(1) opacity(.6);
+      transition: filter var(--trans);
     }
     .client-card:hover {
       border-color: var(--accent);
       color: var(--accent);
       transform: translateY(-2px);
       box-shadow: var(--shadow);
+    }
+    .client-card:hover img {
+      filter: grayscale(0) opacity(1);
     }
 
     /* ── ABOUT (FUNDADOR) ── */
@@ -945,18 +959,24 @@
     <div class="section-inner">
       <div class="section-head centered">
         <div class="section-label reveal">Nossos clientes</div>
-        <h2 class="section-title reveal reveal-delay-1">Empresas que confiam<br>na FONTEC</h2>
-        <p class="section-sub reveal reveal-delay-2">Mais de 12 clientes satisfeitos com nossas soluções em tecnologia e informática.</p>
+        <h2 class="section-title reveal reveal-delay-1">Empresas e locais que confiam<br>na FONTEC</h2>
+        <p class="section-sub reveal reveal-delay-2">Presentes no DAIA Anápolis e em toda a região, atendemos empresas e instituições com soluções completas em TI, redes e segurança eletrônica.</p>
       </div>
       <div class="clients-grid">
-        <div class="client-card reveal">ALIVE BUENO</div>
-        <div class="client-card reveal reveal-delay-1">AMIGOS DA MORADIA</div>
-        <div class="client-card reveal reveal-delay-2">OURO VERDE DE GOIÁS</div>
-        <div class="client-card reveal reveal-delay-3">CÂMARA CAMPO LIMPO</div>
-        <div class="client-card reveal">PILAGEM J</div>
-        <div class="client-card reveal reveal-delay-1">HPS</div>
-        <div class="client-card reveal reveal-delay-2">GOOD TRAVEL</div>
-        <div class="client-card reveal reveal-delay-3">+ Outros</div>
+        <div class="client-card reveal"><img src="assets/img/clientes/alive.svg" alt="Alive" /></div>
+        <div class="client-card reveal reveal-delay-1"><img src="assets/img/clientes/amigos-da-moradia.svg" alt="Amigos da Moradia" /></div>
+        <div class="client-card reveal reveal-delay-2"><img src="assets/img/clientes/camara-ouro-verde.svg" alt="Câmara Ouro Verde de Goiás" /></div>
+        <div class="client-card reveal reveal-delay-3"><img src="assets/img/clientes/camara-campo-limpo.svg" alt="Câmara Campo Limpo de Goiás" /></div>
+        <div class="client-card reveal"><img src="assets/img/clientes/jr-silagem.svg" alt="JR Silagem" /></div>
+        <div class="client-card reveal reveal-delay-1"><img src="assets/img/clientes/hps.svg" alt="HPS" /></div>
+        <div class="client-card reveal reveal-delay-2"><img src="assets/img/clientes/naiot.svg" alt="Naiot" /></div>
+        <div class="client-card reveal reveal-delay-3"><img src="assets/img/clientes/grand-trianon.svg" alt="Grand Trianon" /></div>
+        <div class="client-card reveal"><img src="assets/img/clientes/forms.svg" alt="Forms" /></div>
+        <div class="client-card reveal reveal-delay-1"><img src="assets/img/clientes/camjc.svg" alt="CAMJC" /></div>
+        <div class="client-card reveal reveal-delay-2"><img src="assets/img/clientes/italia-agro.svg" alt="Itália Agro" /></div>
+        <div class="client-card reveal reveal-delay-3"><img src="assets/img/clientes/alfa-distribuicao.svg" alt="Alfa Distribuição e Logística" /></div>
+        <div class="client-card reveal"><img src="assets/img/clientes/pequi-futevolei.svg" alt="Pequi Futevôlei" /></div>
+        <div class="client-card reveal reveal-delay-1"><img src="assets/img/clientes/matao.svg" alt="Matão" /></div>
       </div>
     </div>
   </section>
