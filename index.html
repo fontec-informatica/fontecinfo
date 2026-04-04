@@ -57,33 +57,7 @@
       overflow-x: hidden;
     }
     img { max-width: 100%; display: block; }
-    /* Logo crop: exibe apenas a área do conteúdo horizontal (canvas 500x500) */
-    .logo-crop {
-      width: 195px;
-      height: 55px;
-      overflow: hidden;
-      position: relative;
-      flex-shrink: 0;
-    }
-    .logo-crop img {
-      position: absolute;
-      width: 158px;
-      height: 158px;
-      top: 50%;
-      left: 50%;
-      transform: translate(-50%, -50%);
-      display: block;
-      max-width: none;
-    }
-    .logo-crop-footer {
-      width: 270px;
-      height: 75px;
-      margin-bottom: 12px;
-    }
-    .logo-crop-footer img {
-      width: 220px;
-      height: 220px;
-    }
+    .logo img { display: inline-block; height: 44px; width: auto; object-fit: contain; }
     a { text-decoration: none; color: inherit; }
 
 
@@ -812,8 +786,7 @@
         border-color: var(--accent);
       }
       .menu-toggle { display: flex; }
-      .logo-crop { width: 160px; height: 46px; }
-      .logo-crop img { width: 130px; height: 130px; }
+      .logo img { height: 40px; }
       .about-grid { grid-template-columns: 1fr; }
       .about-image { order: -1; }
       .about-tag { left: 12px; bottom: 12px; }
@@ -837,9 +810,7 @@
   <!-- HEADER -->
   <header>
     <a href="#inicio" class="logo">
-      <div class="logo-crop">
-        <img src="assets/img/logo.png" alt="FONTEC Informática & Tecnologia" />
-      </div>
+      <img src="assets/img/logo.png" alt="FONTEC Informática & Tecnologia" />
     </a>
 
     <nav id="main-nav">
@@ -1060,9 +1031,7 @@
   <footer>
     <div class="footer-grid">
         <div class="footer-brand">
-          <div class="logo-crop logo-crop-footer">
-            <img src="assets/img/logo.png" alt="FONTEC" />
-          </div>
+          <img src="assets/img/logo.png" alt="FONTEC" style="height:56px; width:auto; display:block; object-fit:contain; margin-bottom:12px;" />
           <p>Soluções completas em TI para empresas e residências em Anápolis, Goiás e região.</p>
         </div>
       <div class="footer-col">
