@@ -57,7 +57,17 @@
       overflow-x: hidden;
     }
     img { max-width: 100%; display: block; }
-    .logo img { display: inline-block; height: 44px; width: auto; object-fit: contain; }
+    .logo img {
+      display: inline-block;
+      height: 44px;
+      width: auto;
+      object-fit: contain;
+      mix-blend-mode: multiply;
+    }
+    [data-theme="dark"] .logo img {
+      mix-blend-mode: normal;
+      filter: brightness(0) invert(1);
+    }
     a { text-decoration: none; color: inherit; }
 
 
@@ -786,7 +796,7 @@
         border-color: var(--accent);
       }
       .menu-toggle { display: flex; }
-      .logo img { height: 40px; }
+
       .about-grid { grid-template-columns: 1fr; }
       .about-image { order: -1; }
       .about-tag { left: 12px; bottom: 12px; }
@@ -1031,7 +1041,7 @@
   <footer>
     <div class="footer-grid">
         <div class="footer-brand">
-          <img src="assets/img/logo.png" alt="FONTEC" style="height:56px; width:auto; display:block; object-fit:contain; margin-bottom:12px;" />
+          <img src="assets/img/logo.png" alt="FONTEC" style="height:56px; width:auto; display:block; object-fit:contain; margin-bottom:12px; filter:brightness(0) invert(1);" />
           <p>Soluções completas em TI para empresas e residências em Anápolis, Goiás e região.</p>
         </div>
       <div class="footer-col">
