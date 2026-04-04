@@ -57,7 +57,7 @@
       overflow-x: hidden;
     }
     img { max-width: 100%; display: block; }
-    .logo img { display: inline-block; height: 52px; width: auto; object-fit: contain; max-width: 160px; }
+    .logo img { display: inline-block; height: 62px; width: auto; object-fit: contain; }
     a { text-decoration: none; color: inherit; }
 
 
@@ -454,18 +454,21 @@
       border-color: var(--accent);
       box-shadow: var(--shadow);
     }
+    @keyframes autoGlow {
+      0%, 65%, 100% { filter: grayscale(1) opacity(.55); }
+      72%, 93%      { filter: grayscale(0) opacity(1); }
+    }
     .client-logo img {
-      max-width: 110px;
-      max-height: 55px;
-      width: auto;
-      height: auto;
+      width: 100%;
+      height: 62px;
       object-fit: contain;
       display: block;
-      filter: grayscale(1) opacity(.55);
-      transition: filter var(--trans);
+      animation: autoGlow 9s ease-in-out infinite;
     }
-    .client-logo:hover img {
-      filter: grayscale(0) opacity(1);
+    .client-logo:hover img,
+    .client-logo.lit img {
+      filter: grayscale(0) opacity(1) !important;
+      animation-play-state: paused;
     }
 
     /* ── ABOUT (FUNDADOR) ── */
@@ -770,7 +773,7 @@
         border-color: var(--accent);
       }
       .menu-toggle { display: flex; }
-      .logo img { height: 48px; max-width: 140px; }
+      .logo img { height: 54px; }
       .about-grid { grid-template-columns: 1fr; }
       .about-image { order: -1; }
       .about-tag { left: 12px; bottom: 12px; }
@@ -1015,7 +1018,7 @@
   <footer>
     <div class="footer-grid">
         <div class="footer-brand">
-          <img src="assets/img/logo.png" alt="FONTEC" style="height:56px; width:auto; display:block; object-fit:contain; margin-bottom:12px;" />
+          <img src="assets/img/logo.png" alt="FONTEC" style="height:80px; width:auto; display:block; object-fit:contain; margin-bottom:12px;" />
           <p>Soluções completas em TI para empresas e residências em Anápolis, Goiás e região.</p>
         </div>
       <div class="footer-col">
@@ -1079,11 +1082,27 @@
       ];
       const shuffled = logos.slice().sort(() => Math.random() - 0.5);
       const track = document.getElementById('clientsTrack');
-      [...shuffled, ...shuffled].forEach(({ src, alt }) => {
+      [...shuffled, ...shuffled].forEach(({ src, alt }, i) => {
         const div = document.createElement('div');
         div.className = 'client-logo';
-        div.innerHTML = `<img src="${src}" alt="${alt}" />`;
+        const img = document.createElement('img');
+        img.src = src;
+        img.alt = alt;
+        img.style.animationDelay = `-${(i * 9 / shuffled.length % 9).toFixed(2)}s`;
+        div.appendChild(img);
         track.appendChild(div);
+      });
+
+      /* Click: pausa o carrossel 1.5s e destaca a logo clicada */
+      track.addEventListener('click', (e) => {
+        const card = e.target.closest('.client-logo');
+        if (!card) return;
+        track.style.animationPlayState = 'paused';
+        card.classList.add('lit');
+        setTimeout(() => {
+          track.style.animationPlayState = 'running';
+          card.classList.remove('lit');
+        }, 1500);
       });
     })();
 
