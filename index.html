@@ -1299,42 +1299,19 @@
       });
     });
 
-    /* ── NAVEGAÇÃO LIMPA (sem # na URL) ── */
-    function scrollToSection(id) {
-      const el = document.getElementById(id);
-      if (el) el.scrollIntoView({ behavior: 'smooth' });
-    }
-
-    /* Clique nos links âncora → /secao em vez de #secao */
+    /* ── ÂNCORAS SEM # NA URL ── */
     document.querySelectorAll('a[href^="#"]').forEach(link => {
       link.addEventListener('click', function (e) {
-        const hash = this.getAttribute('href');
-        if (!hash || hash === '#') { e.preventDefault(); return; }
-        const id = hash.slice(1);
-        const el = document.getElementById(id);
+        const target = this.getAttribute('href');
+        if (!target || target === '#') { e.preventDefault(); return; }
+        const el = document.querySelector(target);
         if (el) {
           e.preventDefault();
           el.scrollIntoView({ behavior: 'smooth' });
-          history.pushState({ section: id }, '', '/' + id);
+          history.replaceState(null, '', location.pathname);
         }
       });
     });
-
-    /* Botão voltar/avançar do navegador */
-    window.addEventListener('popstate', function (e) {
-      const id = e.state && e.state.section;
-      if (id) scrollToSection(id);
-      else window.scrollTo({ top: 0, behavior: 'smooth' });
-    });
-
-    /* Acesso direto à URL (ex: fontecinfo.com/servicos) */
-    (function () {
-      const id = location.pathname.replace(/^\//, '').split('/')[0];
-      if (id) {
-        const el = document.getElementById(id);
-        if (el) setTimeout(() => el.scrollIntoView({ behavior: 'smooth' }), 400);
-      }
-    })();
 
     /* SCROLL REVEAL */
     const observer = new IntersectionObserver((entries) => {
