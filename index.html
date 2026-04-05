@@ -557,16 +557,12 @@
       overflow: visible;
     }
     .client-logo img {
-      max-width: 100%;
-      max-height: 58px;
-      width: auto;
-      height: auto;
-      object-fit: contain;
       display: block;
-      image-rendering: -webkit-optimize-contrast;
-      image-rendering: crisp-edges;
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
       filter: grayscale(1) opacity(.45);
-      transition: filter .5s ease, transform .3s ease;
+      transition: filter .5s ease;
     }
     .client-logo.highlight {
       border-color: var(--accent);
@@ -1225,30 +1221,37 @@
         track.appendChild(div);
       });
 
-      /* Highlight: exatamente 1 por vez conforme passa pelo centro */
+      /* Highlight: 1 por vez via rAF + getBoundingClientRect (funciona com CSS transform) */
       const marquee = document.querySelector('.clients-marquee');
-      const highlightObserver = new IntersectionObserver((entries) => {
-        entries.forEach(entry => {
-          if (entry.isIntersecting) {
-            /* Remove destaque de todos antes de aplicar no novo */
-            document.querySelectorAll('.client-logo.highlight').forEach(el => {
-              if (el !== entry.target) {
-                el.classList.remove('highlight');
-                el.style.animation = '';
-              }
-            });
-            entry.target.classList.add('highlight');
-          } else {
-            entry.target.classList.remove('highlight');
-            entry.target.style.animation = '';
-          }
+      let currentHighlight = null;
+
+      function updateHighlight() {
+        const mRect = marquee.getBoundingClientRect();
+        const center = mRect.left + mRect.width / 2;
+        const logos  = document.querySelectorAll('.client-logo');
+
+        let closest = null;
+        let closestDist = Infinity;
+
+        logos.forEach(logo => {
+          const r = logo.getBoundingClientRect();
+          /* considera só logos visíveis dentro do marquee */
+          if (r.right < mRect.left || r.left > mRect.right) return;
+          const dist = Math.abs((r.left + r.width / 2) - center);
+          if (dist < closestDist) { closestDist = dist; closest = logo; }
         });
-      }, {
-        root: marquee,
-        rootMargin: '0px -44% 0px -44%',
-        threshold: 0.6
-      });
-      document.querySelectorAll('.client-logo').forEach(el => highlightObserver.observe(el));
+
+        if (closest !== currentHighlight) {
+          if (currentHighlight) {
+            currentHighlight.classList.remove('highlight');
+            currentHighlight.style.animation = '';
+          }
+          if (closest) closest.classList.add('highlight');
+          currentHighlight = closest;
+        }
+        requestAnimationFrame(updateHighlight);
+      }
+      requestAnimationFrame(updateHighlight);
 
       /* Click: pausa carrossel 1.5s e mantém logo colorida */
       track.addEventListener('click', (e) => {
