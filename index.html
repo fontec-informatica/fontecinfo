@@ -1299,6 +1299,20 @@
       });
     });
 
+    /* ── ÂNCORAS SEM # NA URL ── */
+    document.querySelectorAll('a[href^="#"]').forEach(link => {
+      link.addEventListener('click', function (e) {
+        const target = this.getAttribute('href');
+        if (!target || target === '#') { e.preventDefault(); return; }
+        const el = document.querySelector(target);
+        if (el) {
+          e.preventDefault();
+          el.scrollIntoView({ behavior: 'smooth' });
+          history.replaceState(null, '', location.pathname);
+        }
+      });
+    });
+
     /* SCROLL REVEAL */
     const observer = new IntersectionObserver((entries) => {
       entries.forEach(e => {
