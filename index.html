@@ -483,12 +483,14 @@
       transform-origin: left;
       transition: transform var(--trans);
     }
-    .service-card:hover {
+    .service-card:hover,
+    .service-card.active {
       border-color: rgba(26,107,66,.3);
       transform: translateY(-4px);
       box-shadow: var(--shadow);
     }
-    .service-card:hover::before { transform: scaleX(1); }
+    .service-card:hover::before,
+    .service-card.active::before { transform: scaleX(1); }
 
     .service-icon {
       width: 48px; height: 48px;
@@ -1326,6 +1328,37 @@
       document.querySelector('header').style.boxShadow =
         scrollTop > 20 ? '0 4px 24px rgba(0,0,0,.08)' : 'none';
     });
+
+    /* ── DESTAQUE AUTOMÁTICO DE CARDS (MOBILE) ── */
+    (function () {
+      const cards = document.querySelectorAll('.service-card');
+      let activeCard = null;
+
+      function highlightMostVisible() {
+        if (window.innerWidth >= 768) {
+          if (activeCard) { activeCard.classList.remove('active'); activeCard = null; }
+          return;
+        }
+        const vh = window.innerHeight;
+        let best = null, bestRatio = -1;
+        cards.forEach(card => {
+          const r = card.getBoundingClientRect();
+          const visible = Math.min(r.bottom, vh) - Math.max(r.top, 0);
+          const ratio = visible / r.height;
+          if (ratio > bestRatio) { bestRatio = ratio; best = card; }
+        });
+        if (best !== activeCard) {
+          if (activeCard) activeCard.classList.remove('active');
+          if (best && bestRatio > 0.4) best.classList.add('active');
+          else best = null;
+          activeCard = best;
+        }
+      }
+
+      window.addEventListener('scroll', highlightMostVisible, { passive: true });
+      window.addEventListener('resize', highlightMostVisible, { passive: true });
+      highlightMostVisible();
+    })();
 
     /* ── PROTEÇÃO DE CONTEÚDO ── */
     /* Bloqueia menu de contexto (botão direito) */
