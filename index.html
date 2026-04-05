@@ -1001,9 +1001,9 @@
         <a href="#servicos" class="btn-secondary">Ver serviços</a>
       </div>
       <div class="hero-stats hero-anim" style="animation-delay:.7s">
-        <div class="stat"><div class="stat-num">12<span>+</span></div><div class="stat-label">Clientes ativos</div></div>
-        <div class="stat"><div class="stat-num">5<span>+</span></div><div class="stat-label">Anos de experiência</div></div>
-        <div class="stat"><div class="stat-num">100<span>%</span></div><div class="stat-label">Comprometimento</div></div>
+        <div class="stat"><div class="stat-num"><span class="count-up" data-target="75">0</span><span>+</span></div><div class="stat-label">Clientes ativos</div></div>
+        <div class="stat"><div class="stat-num"><span class="count-up" data-target="7">0</span><span>+</span></div><div class="stat-label">Anos de experiência</div></div>
+        <div class="stat"><div class="stat-num"><span class="count-up" data-target="100">0</span><span>%</span></div><div class="stat-label">Comprometimento</div></div>
       </div>
     </div>
   </section>
@@ -1358,6 +1358,40 @@
       window.addEventListener('scroll', highlightMostVisible, { passive: true });
       window.addEventListener('resize', highlightMostVisible, { passive: true });
       highlightMostVisible();
+    })();
+
+    /* ── COUNT-UP HERO STATS ── */
+    (function () {
+      const DURATION = 2000;
+      const counters = document.querySelectorAll('.count-up');
+      let started = false;
+
+      function easeOut(t) { return 1 - Math.pow(1 - t, 3); }
+
+      function runCounters() {
+        if (started) return;
+        started = true;
+        const start = performance.now();
+        const targets = Array.from(counters).map(el => parseInt(el.dataset.target, 10));
+
+        function tick(now) {
+          const elapsed = now - start;
+          const progress = Math.min(elapsed / DURATION, 1);
+          const eased = easeOut(progress);
+          counters.forEach((el, i) => {
+            el.textContent = Math.round(eased * targets[i]);
+          });
+          if (progress < 1) requestAnimationFrame(tick);
+          else counters.forEach((el, i) => { el.textContent = targets[i]; });
+        }
+        requestAnimationFrame(tick);
+      }
+
+      const statsEl = document.querySelector('.hero-stats');
+      const obs = new IntersectionObserver(entries => {
+        if (entries[0].isIntersecting) { runCounters(); obs.disconnect(); }
+      }, { threshold: 0.5 });
+      obs.observe(statsEl);
     })();
 
     /* ── PROTEÇÃO DE CONTEÚDO ── */
