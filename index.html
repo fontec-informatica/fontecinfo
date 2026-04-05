@@ -429,6 +429,19 @@
       to   { opacity: 1; transform: translateY(0); }
     }
 
+    /* ── BARRA DE PROGRESSO ── */
+    #read-progress {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 0%;
+      height: 3px;
+      background: linear-gradient(90deg, var(--accent), var(--accent2));
+      z-index: 9999;
+      transition: width .1s linear;
+      pointer-events: none;
+    }
+
     /* ── SCROLL REVEAL ── */
     .js-ready .reveal {
       opacity: 0;
@@ -911,6 +924,9 @@
 </head>
 <body>
 
+  <!-- BARRA DE PROGRESSO -->
+  <div id="read-progress"></div>
+
   <!-- SCROLL TO TOP -->
   <button class="scroll-top" id="scrollTop" aria-label="Voltar ao topo">
     <i class="fa fa-arrow-up"></i>
@@ -1301,10 +1317,14 @@
       window.scrollTo({ top: 0, behavior: 'smooth' });
     });
 
-    /* HEADER SHADOW ON SCROLL */
+    /* BARRA DE PROGRESSO + HEADER SHADOW ON SCROLL */
+    const progressBar = document.getElementById('read-progress');
     window.addEventListener('scroll', () => {
+      const scrollTop = window.scrollY;
+      const docHeight = document.documentElement.scrollHeight - window.innerHeight;
+      progressBar.style.width = (docHeight > 0 ? (scrollTop / docHeight) * 100 : 0) + '%';
       document.querySelector('header').style.boxShadow =
-        window.scrollY > 20 ? '0 4px 24px rgba(0,0,0,.08)' : 'none';
+        scrollTop > 20 ? '0 4px 24px rgba(0,0,0,.08)' : 'none';
     });
 
     /* ── PROTEÇÃO DE CONTEÚDO ── */
