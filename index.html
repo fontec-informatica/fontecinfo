@@ -793,6 +793,22 @@
     }
     .whatsapp-float svg { width: 30px; height: 30px; }
 
+    /* ── PROTEÇÃO DE CONTEÚDO ── */
+    body {
+      -webkit-user-select: none;
+      -moz-user-select: none;
+      user-select: none;
+    }
+    img {
+      -webkit-user-drag: none;
+      user-drag: none;
+      pointer-events: none;
+    }
+    /* Bloqueia impressão */
+    @media print {
+      body { display: none !important; }
+    }
+
     /* ── SCROLL TO TOP ── */
     .scroll-top {
       position: fixed;
@@ -1276,6 +1292,41 @@
       document.querySelector('header').style.boxShadow =
         window.scrollY > 20 ? '0 4px 24px rgba(0,0,0,.08)' : 'none';
     });
+
+    /* ── PROTEÇÃO DE CONTEÚDO ── */
+    /* Bloqueia menu de contexto (botão direito) */
+    document.addEventListener('contextmenu', e => e.preventDefault());
+
+    /* Bloqueia copiar e recortar */
+    document.addEventListener('copy',  e => e.preventDefault());
+    document.addEventListener('cut',   e => e.preventDefault());
+
+    /* Bloqueia drag de imagens */
+    document.querySelectorAll('img').forEach(img => {
+      img.addEventListener('dragstart', e => e.preventDefault());
+    });
+
+    /* Bloqueia atalhos de teclado sensíveis */
+    document.addEventListener('keydown', e => {
+      const k = e.key.toLowerCase();
+      const ctrl = e.ctrlKey || e.metaKey;
+      if (
+        (ctrl && k === 'u') ||           /* Ver código-fonte */
+        (ctrl && k === 's') ||           /* Salvar página */
+        (ctrl && k === 'p') ||           /* Imprimir */
+        (ctrl && k === 'a') ||           /* Selecionar tudo */
+        (ctrl && e.shiftKey && k === 'i') || /* DevTools */
+        (ctrl && e.shiftKey && k === 'j') || /* Console */
+        (ctrl && e.shiftKey && k === 'c') || /* Inspetor */
+        e.key === 'F12'                  /* DevTools */
+      ) {
+        e.preventDefault();
+        return false;
+      }
+    });
+
+    /* Bloqueia seleção de texto via mouse */
+    document.addEventListener('selectstart', e => e.preventDefault());
   </script>
 </body>
 </html>
