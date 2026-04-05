@@ -537,6 +537,12 @@
       from { transform: translateX(0); }
       to   { transform: translateX(-50%); }
     }
+    @keyframes logoPop {
+      0%   { transform: scale(1); }
+      40%  { transform: scale(1.1); }
+      70%  { transform: scale(1.05); }
+      100% { transform: scale(1.05); }
+    }
     .client-logo {
       background: var(--surface);
       border: 1px solid var(--border);
@@ -544,35 +550,28 @@
       width: 150px;
       height: 90px;
       display: flex; align-items: center; justify-content: center;
-      padding: 18px;
+      padding: 16px;
       flex-shrink: 0;
-      transition: border-color var(--trans), box-shadow var(--trans);
-    }
-    .client-logo:hover {
-      border-color: var(--accent);
-      box-shadow: var(--shadow);
-    }
-    @keyframes logoPop {
-      0%   { transform: scale(1); }
-      40%  { transform: scale(1.12); }
-      70%  { transform: scale(1.06); }
-      100% { transform: scale(1); }
-    }
-    .client-logo {
       transition: border-color var(--trans), box-shadow var(--trans), transform var(--trans);
+      position: relative;
+      overflow: visible;
     }
     .client-logo img {
-      width: 100%;
-      height: 62px;
+      max-width: 100%;
+      max-height: 58px;
+      width: auto;
+      height: auto;
       object-fit: contain;
       display: block;
+      image-rendering: -webkit-optimize-contrast;
+      image-rendering: crisp-edges;
       filter: grayscale(1) opacity(.45);
-      transition: filter .5s ease;
+      transition: filter .5s ease, transform .3s ease;
     }
     .client-logo.highlight {
       border-color: var(--accent);
-      box-shadow: 0 0 24px rgba(26,107,66,.2);
-      animation: logoPop .5s cubic-bezier(.4,0,.2,1) forwards;
+      box-shadow: 0 0 28px rgba(26,107,66,.25);
+      animation: logoPop .4s cubic-bezier(.4,0,.2,1) forwards;
       z-index: 2;
     }
     .client-logo.highlight img {
@@ -1226,11 +1225,18 @@
         track.appendChild(div);
       });
 
-      /* Highlight: um por um conforme passa pelo centro */
+      /* Highlight: exatamente 1 por vez conforme passa pelo centro */
       const marquee = document.querySelector('.clients-marquee');
       const highlightObserver = new IntersectionObserver((entries) => {
         entries.forEach(entry => {
           if (entry.isIntersecting) {
+            /* Remove destaque de todos antes de aplicar no novo */
+            document.querySelectorAll('.client-logo.highlight').forEach(el => {
+              if (el !== entry.target) {
+                el.classList.remove('highlight');
+                el.style.animation = '';
+              }
+            });
             entry.target.classList.add('highlight');
           } else {
             entry.target.classList.remove('highlight');
@@ -1239,8 +1245,8 @@
         });
       }, {
         root: marquee,
-        rootMargin: '0px -38% 0px -38%',
-        threshold: 0.1
+        rootMargin: '0px -44% 0px -44%',
+        threshold: 0.6
       });
       document.querySelectorAll('.client-logo').forEach(el => highlightObserver.observe(el));
 
