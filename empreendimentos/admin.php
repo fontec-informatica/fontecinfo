@@ -449,6 +449,48 @@ $okMsg = match($ok) {
     /* EMPTY */
     .empty-row td { text-align: center; color: var(--muted); padding: 40px; }
 
+    /* PROGRESS */
+    .upload-overlay {
+      display: none;
+      position: fixed; inset: 0; z-index: 300;
+      background: rgba(0,0,0,.6);
+      backdrop-filter: blur(4px);
+      align-items: center; justify-content: center;
+    }
+    .upload-overlay.show { display: flex; }
+    .upload-box {
+      background: var(--surface);
+      border-radius: var(--radius);
+      padding: 40px 48px;
+      text-align: center;
+      width: 100%; max-width: 420px;
+      border: 1px solid var(--border);
+      box-shadow: 0 30px 80px rgba(0,0,0,.3);
+    }
+    .upload-box h3 {
+      font-family: 'Syne', sans-serif;
+      font-size: 1.1rem; font-weight: 700;
+      margin-bottom: 8px; color: var(--text);
+    }
+    .upload-box p { font-size: .88rem; color: var(--muted); margin-bottom: 24px; }
+    .progress-track {
+      background: var(--bg2);
+      border-radius: 99px; height: 10px;
+      overflow: hidden; margin-bottom: 12px;
+    }
+    .progress-fill {
+      height: 100%; width: 0%;
+      background: linear-gradient(90deg, var(--accent), var(--accent2));
+      border-radius: 99px;
+      transition: width .2s ease;
+    }
+    .progress-pct {
+      font-family: 'Syne', sans-serif;
+      font-size: 1.6rem; font-weight: 800;
+      color: var(--accent); margin-bottom: 4px;
+    }
+    .progress-label { font-size: .8rem; color: var(--muted); }
+
     @media (max-width: 640px) {
       .admin-main { padding: 24px 4%; }
       .form-card  { padding: 20px; }
@@ -628,7 +670,7 @@ $okMsg = match($ok) {
       </div>
 
       <div class="form-actions">
-        <button class="btn-primary" type="submit" style="width:auto;padding:12px 32px">
+        <button class="btn-primary" id="btnSalvar" type="button" style="width:auto;padding:12px 32px" onclick="submitForm()">
           <i class="fa fa-save"></i> <?= $editRow ? 'Salvar alterações' : 'Criar propriedade' ?>
         </button>
         <?php if ($editRow): ?>
@@ -636,6 +678,19 @@ $okMsg = match($ok) {
         <?php endif; ?>
       </div>
     </form>
+  </div>
+
+  <!-- OVERLAY PROGRESSO -->
+  <div class="upload-overlay" id="uploadOverlay">
+    <div class="upload-box">
+      <h3><i class="fa fa-cloud-upload-alt"></i> Enviando dados…</h3>
+      <p id="progressLabel">Preparando o envio</p>
+      <div class="progress-track">
+        <div class="progress-fill" id="progressFill"></div>
+      </div>
+      <div class="progress-pct" id="progressPct">0%</div>
+      <div class="progress-label" id="progressSub">Aguarde, não feche esta janela</div>
+    </div>
   </div>
 
   <!-- TABELA -->
@@ -704,6 +759,55 @@ $okMsg = match($ok) {
   /* tema */
   const saved = localStorage.getItem('emp-theme') || 'light';
   document.documentElement.setAttribute('data-theme', saved);
+
+  /* ── UPLOAD COM PROGRESSO ── */
+  function submitForm() {
+    const form    = document.querySelector('form[enctype]');
+    const overlay = document.getElementById('uploadOverlay');
+    const fill    = document.getElementById('progressFill');
+    const pct     = document.getElementById('progressPct');
+    const lbl     = document.getElementById('progressLabel');
+    const sub     = document.getElementById('progressSub');
+
+    if (!form.checkValidity()) { form.reportValidity(); return; }
+
+    const fd = new FormData(form);
+    const xhr = new XMLHttpRequest();
+
+    overlay.classList.add('show');
+
+    xhr.upload.addEventListener('progress', e => {
+      if (!e.lengthComputable) return;
+      const p = Math.round((e.loaded / e.total) * 100);
+      fill.style.width = p + '%';
+      pct.textContent  = p + '%';
+      lbl.textContent  = p < 100 ? 'Enviando arquivos…' : 'Processando no servidor…';
+      sub.textContent  = formatBytes(e.loaded) + ' de ' + formatBytes(e.total);
+    });
+
+    xhr.addEventListener('load', () => {
+      fill.style.width = '100%';
+      pct.textContent  = '100%';
+      lbl.textContent  = 'Concluído!';
+      sub.textContent  = 'Redirecionando…';
+      /* redireciona para a URL retornada (header Location do PHP) */
+      window.location.href = xhr.responseURL || 'admin.php?ok=save';
+    });
+
+    xhr.addEventListener('error', () => {
+      overlay.classList.remove('show');
+      alert('Erro no envio. Verifique sua conexão e tente novamente.');
+    });
+
+    xhr.open('POST', form.action || 'admin.php');
+    xhr.send(fd);
+  }
+
+  function formatBytes(b) {
+    if (b < 1024)       return b + ' B';
+    if (b < 1048576)    return (b/1024).toFixed(1) + ' KB';
+    return (b/1048576).toFixed(1) + ' MB';
+  }
 
   /* ── DELETE FOTO ── */
   function toggleDelFoto(hash, filename) {
