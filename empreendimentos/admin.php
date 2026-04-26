@@ -706,9 +706,10 @@ $okMsg = match($ok) {
         <div class="field field-full">
           <label>
             <?= !empty($editRow['fotos']) ? 'Adicionar mais fotos' : 'Fotos' ?>
-            <small style="color:var(--muted)"> — JPG/PNG/WebP, múltiplas</small>
+            <small style="color:var(--muted)"> — JPG/PNG/WebP · selecione e arraste para ordenar antes de salvar</small>
           </label>
-          <input type="file" name="fotos[]" accept="image/jpeg,image/png,image/webp,image/gif" multiple />
+          <input type="file" id="fotoFileInput" accept="image/jpeg,image/png,image/webp,image/gif" multiple />
+          <div class="fotos-preview" id="new-fotos-preview" style="margin-top:10px;min-height:0"></div>
         </div>
 
         <!-- UPLOAD VÍDEO -->
@@ -846,6 +847,16 @@ $okMsg = match($ok) {
     if (!form.checkValidity()) { form.reportValidity(); return; }
 
     const fd = new FormData(form);
+
+    /* injeta fotos novas na ordem arrastada pelo usuário */
+    const newPrev = document.getElementById('new-fotos-preview');
+    if (newPrev) {
+      fd.delete('fotos[]');
+      newPrev.querySelectorAll('.foto-thumb').forEach(el => {
+        if (el._file) fd.append('fotos[]', el._file, el._file.name);
+      });
+    }
+
     const xhr = new XMLHttpRequest();
 
     overlay.classList.add('show');
@@ -881,6 +892,61 @@ $okMsg = match($ok) {
     if (b < 1048576)    return (b/1024).toFixed(1) + ' KB';
     return (b/1048576).toFixed(1) + ' MB';
   }
+
+  /* ── PREVIEW E REORDENAÇÃO DE NOVAS FOTOS ── */
+  (function() {
+    const input   = document.getElementById('fotoFileInput');
+    const preview = document.getElementById('new-fotos-preview');
+    if (!input || !preview) return;
+
+    input.addEventListener('change', () => {
+      Array.from(input.files).forEach(file => addCard(file));
+      input.value = ''; // permite selecionar o mesmo arquivo novamente
+    });
+
+    function addCard(file) {
+      const reader = new FileReader();
+      reader.onload = ev => {
+        const el = document.createElement('div');
+        el.className  = 'foto-thumb';
+        el.draggable  = true;
+        el._file      = file;
+        el.innerHTML  = `
+          <div class="foto-drag-handle"><i class="fa fa-grip-dots-vertical"></i> mover</div>
+          <div class="foto-thumb-img">
+            <img src="${ev.target.result}" alt="" style="pointer-events:none" />
+          </div>
+          <button type="button" class="foto-del-btn"
+            onclick="this.closest('.foto-thumb').remove()">
+            <i class="fa fa-trash"></i> Remover
+          </button>`;
+        preview.appendChild(el);
+      };
+      reader.readAsDataURL(file);
+    }
+
+    let draggingNew = null;
+    preview.addEventListener('dragstart', e => {
+      draggingNew = e.target.closest('.foto-thumb');
+      if (draggingNew) setTimeout(() => draggingNew.classList.add('dragging'), 0);
+    });
+    preview.addEventListener('dragend', () => {
+      if (draggingNew) draggingNew.classList.remove('dragging');
+      preview.querySelectorAll('.foto-thumb').forEach(el => el.classList.remove('drag-over'));
+      draggingNew = null;
+    });
+    preview.addEventListener('dragover', e => {
+      e.preventDefault();
+      const target = e.target.closest('.foto-thumb');
+      if (!target || target === draggingNew) return;
+      preview.querySelectorAll('.foto-thumb').forEach(el => el.classList.remove('drag-over'));
+      target.classList.add('drag-over');
+      const rect = target.getBoundingClientRect();
+      if (e.clientX < rect.left + rect.width / 2) preview.insertBefore(draggingNew, target);
+      else preview.insertBefore(draggingNew, target.nextSibling);
+    });
+    preview.addEventListener('drop', e => e.preventDefault());
+  })();
 
   /* ── REORDENAR FOTOS (drag-and-drop) ── */
   (function() {
