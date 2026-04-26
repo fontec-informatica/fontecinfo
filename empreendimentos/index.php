@@ -653,7 +653,7 @@ if (file_exists($jsonFile)) {
       <h4>Contato</h4>
       <ul>
         <li><a href="https://wa.me/message/AVL74KZZJTWMO1" target="_blank" rel="noopener">WhatsApp</a></li>
-        <li><a href="#">Anápolis · GO</a></li>
+        <li><span>Anápolis · GO</span></li>
       </ul>
     </div>
   </div>
