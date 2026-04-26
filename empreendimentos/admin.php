@@ -109,7 +109,8 @@ if (!empty($_SESSION['admin'])) {
             'estado'      => sanitize($_POST['estado']      ?? ''),
             'tipo'        => sanitize($_POST['tipo']        ?? ''),
             'hectares'    => sanitize($_POST['hectares']    ?? ''),
-            'preco'       => sanitize($_POST['preco']       ?? ''),
+            'alqueires'   => sanitize($_POST['alqueires']   ?? ''),
+            'preco'       => sanitize(str_replace(['.', ','], ['', '.'], $_POST['preco'] ?? '')),
             'agua'        => sanitize($_POST['agua']        ?? ''),
             'solo'        => sanitize($_POST['solo']        ?? ''),
             'benfeitorias'=> sanitize($_POST['benfeitorias']?? ''),
@@ -390,23 +391,28 @@ $okMsg = match($ok) {
     .field-full { grid-column: 1 / -1; }
 
     .fotos-preview {
-      display: flex; flex-wrap: wrap; gap: 10px; margin-top: 10px;
+      display: flex; flex-wrap: wrap; gap: 12px; margin-top: 10px;
     }
     .foto-thumb {
+      display: flex; flex-direction: column; align-items: center; gap: 5px;
+    }
+    .foto-thumb-img {
       position: relative; width: 90px; height: 70px;
       border-radius: var(--radius-sm); overflow: hidden;
-      border: 1.5px solid var(--border);
+      border: 1.5px solid var(--border); transition: border-color .2s, opacity .2s;
     }
-    .foto-thumb img { width: 100%; height: 100%; object-fit: cover; }
-    .foto-thumb label {
-      position: absolute; inset: 0;
-      background: rgba(220,38,38,.6);
-      display: flex; align-items: center; justify-content: center;
-      cursor: pointer; opacity: 0; transition: opacity .2s;
-      color: #fff; font-size: 1.1rem;
+    .foto-thumb-img img { width: 100%; height: 100%; object-fit: cover; }
+    .foto-thumb.marcada .foto-thumb-img { border-color: var(--danger); opacity: .4; }
+    .foto-del-btn {
+      font-size: .7rem; color: var(--danger);
+      background: none; border: 1px solid var(--danger);
+      border-radius: 6px; padding: 2px 7px;
+      cursor: pointer; transition: all .2s; white-space: nowrap;
     }
-    .foto-thumb:hover label { opacity: 1; }
-    .foto-thumb input { position: absolute; opacity: 0; pointer-events: none; }
+    .foto-del-btn:hover, .foto-thumb.marcada .foto-del-btn {
+      background: var(--danger); color: #fff;
+    }
+    .foto-thumb input[type=checkbox] { display: none; }
 
     .toggle-wrap {
       display: flex; align-items: center; gap: 10px;
@@ -534,11 +540,16 @@ $okMsg = match($ok) {
         </div>
         <div class="field">
           <label>Hectares</label>
-          <input type="text" name="hectares" value="<?= htmlspecialchars($editRow['hectares'] ?? '') ?>" placeholder="Ex: 500" />
+          <input type="number" step="0.01" id="inp_hectares" name="hectares" value="<?= htmlspecialchars($editRow['hectares'] ?? '') ?>" placeholder="Ex: 484" />
+        </div>
+        <div class="field">
+          <label>Alqueires Goianos <small style="color:var(--muted)">(1 alq = 4,84 ha)</small></label>
+          <input type="number" step="0.01" id="inp_alqueires" name="alqueires" value="<?= htmlspecialchars($editRow['alqueires'] ?? '') ?>" placeholder="Ex: 100" />
         </div>
         <div class="field">
           <label>Preço (R$)</label>
-          <input type="text" name="preco" value="<?= htmlspecialchars($editRow['preco'] ?? '') ?>" placeholder="Ex: 2500000" />
+          <input type="text" id="inp_preco" name="preco" value="<?= htmlspecialchars(!empty($editRow['preco']) ? number_format((float)$editRow['preco'], 2, ',', '.') : '') ?>" placeholder="Ex: 2.500.000,00" />
+          <input type="hidden" id="inp_preco_raw" name="preco_raw" value="<?= htmlspecialchars($editRow['preco'] ?? '') ?>" />
         </div>
         <div class="field">
           <label>Água / Irrigação</label>
@@ -568,12 +579,14 @@ $okMsg = match($ok) {
           <label>Fotos atuais <small style="color:var(--muted)">(clique para marcar remoção)</small></label>
           <div class="fotos-preview">
             <?php foreach ($editRow['fotos'] as $foto): ?>
-              <div class="foto-thumb">
-                <img src="uploads/<?= htmlspecialchars($foto) ?>" alt="" />
-                <label title="Remover esta foto">
-                  <i class="fa fa-trash"></i>
-                  <input type="checkbox" name="del_fotos[]" value="<?= htmlspecialchars($foto) ?>" />
-                </label>
+              <div class="foto-thumb" id="thumb_<?= md5($foto) ?>">
+                <div class="foto-thumb-img">
+                  <img src="uploads/<?= htmlspecialchars($foto) ?>" alt="" />
+                </div>
+                <button type="button" class="foto-del-btn" onclick="toggleDelFoto('<?= md5($foto) ?>', '<?= htmlspecialchars($foto) ?>')">
+                  <i class="fa fa-trash"></i> Remover
+                </button>
+                <input type="checkbox" name="del_fotos[]" id="cb_<?= md5($foto) ?>" value="<?= htmlspecialchars($foto) ?>" />
               </div>
             <?php endforeach; ?>
           </div>
@@ -691,6 +704,51 @@ $okMsg = match($ok) {
   /* tema */
   const saved = localStorage.getItem('emp-theme') || 'light';
   document.documentElement.setAttribute('data-theme', saved);
+
+  /* ── DELETE FOTO ── */
+  function toggleDelFoto(hash, filename) {
+    const thumb = document.getElementById('thumb_' + hash);
+    const cb    = document.getElementById('cb_'    + hash);
+    const btn   = thumb.querySelector('.foto-del-btn');
+    cb.checked  = !cb.checked;
+    thumb.classList.toggle('marcada', cb.checked);
+    btn.innerHTML = cb.checked
+      ? '<i class="fa fa-undo"></i> Cancelar'
+      : '<i class="fa fa-trash"></i> Remover';
+  }
+
+  /* ── PREÇO COM FORMATAÇÃO ── */
+  const inpPreco = document.getElementById('inp_preco');
+  if (inpPreco) {
+    inpPreco.addEventListener('input', () => {
+      let raw = inpPreco.value.replace(/\D/g, '');
+      if (!raw) { inpPreco.value = ''; return; }
+      const num = (parseInt(raw) / 100).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+      inpPreco.value = num;
+    });
+    inpPreco.addEventListener('blur', () => {
+      // garante formato correto ao sair do campo
+      let raw = inpPreco.value.replace(/\./g, '').replace(',', '.');
+      const n = parseFloat(raw);
+      if (!isNaN(n)) inpPreco.value = n.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    });
+  }
+
+  /* ── CONVERSÃO HECTARES ↔ ALQUEIRES GOIANOS ── */
+  const ALQ = 4.84;
+  const inpHa  = document.getElementById('inp_hectares');
+  const inpAlq = document.getElementById('inp_alqueires');
+
+  if (inpHa && inpAlq) {
+    inpHa.addEventListener('input', () => {
+      const v = parseFloat(inpHa.value);
+      inpAlq.value = isNaN(v) ? '' : (v / ALQ).toFixed(2);
+    });
+    inpAlq.addEventListener('input', () => {
+      const v = parseFloat(inpAlq.value);
+      inpHa.value = isNaN(v) ? '' : (v * ALQ).toFixed(2);
+    });
+  }
 </script>
 </body>
 </html>
