@@ -225,12 +225,23 @@ if (file_exists($jsonFile)) {
     .card-thumb {
       position: relative; width: 100%; height: 220px;
       overflow: hidden; background: var(--bg2);
+      cursor: pointer;
     }
     .card-thumb img {
       width: 100%; height: 100%; object-fit: cover;
       transition: transform .5s ease;
     }
     .card:hover .card-thumb img { transform: scale(1.06); }
+    .card-thumb::after {
+      content: '\f065';
+      font-family: 'Font Awesome 6 Free'; font-weight: 900;
+      position: absolute; inset: 0;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 1.6rem; color: #fff;
+      background: rgba(0,0,0,.28);
+      opacity: 0; transition: opacity .3s;
+    }
+    .card-thumb:hover::after { opacity: 1; }
     .card-thumb-placeholder {
       width: 100%; height: 100%;
       display: flex; align-items: center; justify-content: center;
@@ -291,14 +302,14 @@ if (file_exists($jsonFile)) {
     .card-btn-video {
       display: flex; align-items: center; justify-content: center; gap: 6px;
       padding: 11px 14px;
-      background: #dc2626; color: #fff;
+      background: var(--accent); color: #fff;
       border-radius: var(--radius-sm);
       font-size: .88rem; font-weight: 700;
       border: none; cursor: pointer;
       transition: background var(--trans), transform var(--trans);
       white-space: nowrap;
     }
-    .card-btn-video:hover { background: #b91c1c; transform: translateY(-1px); }
+    .card-btn-video:hover { background: var(--accent2); transform: translateY(-1px); }
     .card-video-badge {
       position: absolute; bottom: 10px; left: 12px;
       background: rgba(220,38,38,.92);
@@ -320,14 +331,33 @@ if (file_exists($jsonFile)) {
     .btn-goto-video {
       display: flex; align-items: center; justify-content: center; gap: 8px;
       padding: 14px 20px;
-      background: #dc2626; color: #fff;
+      background: var(--accent); color: #fff;
       border-radius: var(--radius-sm);
       font-weight: 700; font-size: .95rem;
       border: none; cursor: pointer;
       transition: background var(--trans), transform var(--trans);
       white-space: nowrap;
     }
-    .btn-goto-video:hover { background: #b91c1c; transform: translateY(-2px); }
+    .btn-goto-video:hover { background: var(--accent2); transform: translateY(-2px); }
+
+    /* botão tela cheia na galeria */
+    .gallery-fullscreen {
+      position: absolute; top: 12px; right: 12px;
+      width: 36px; height: 36px; border-radius: 8px;
+      background: rgba(0,0,0,.5); color: #fff;
+      border: none; cursor: pointer; z-index: 6;
+      display: flex; align-items: center; justify-content: center;
+      font-size: .95rem; transition: background .2s;
+      backdrop-filter: blur(4px);
+    }
+    .gallery-fullscreen:hover { background: var(--accent); }
+
+    /* tela cheia nativa */
+    .gallery:-webkit-full-screen { width: 100vw; height: 100vh; border-radius: 0; }
+    .gallery:-moz-full-screen    { width: 100vw; height: 100vh; border-radius: 0; }
+    .gallery:fullscreen          { width: 100vw; height: 100vh; border-radius: 0; }
+    .gallery:fullscreen .gallery-slides { height: 100%; }
+    .gallery:fullscreen .gallery-slide  { object-fit: contain; background: #000; }
 
     /* ── EMPTY STATE ── */
     .empty-state {
@@ -637,6 +667,7 @@ if (file_exists($jsonFile)) {
     <div class="gallery" id="gallery">
       <div class="gallery-slides" id="gallerySlides"></div>
       <div class="gallery-wm" id="galleryWm"></div>
+      <button class="gallery-fullscreen" id="galleryFullscreen" aria-label="Tela cheia" title="Tela cheia"><i class="fa fa-expand"></i></button>
       <button class="gallery-nav prev" id="galleryPrev" aria-label="Anterior"><i class="fa fa-chevron-left"></i></button>
       <button class="gallery-nav next" id="galleryNext" aria-label="Próximo"><i class="fa fa-chevron-right"></i></button>
       <div class="gallery-dots" id="galleryDots"></div>
@@ -750,7 +781,7 @@ function renderCards(list) {
       : '';
 
     return `<article class="card" data-idx="${i}" data-tipo="${(f.tipo||'').toLowerCase()}">
-      <div class="card-thumb" id="cthumb_${i}">
+      <div class="card-thumb" id="cthumb_${i}" onclick="openModal(${i})">
         ${thumbEl}
         <div class="wm-overlay" id="cwm_${i}"></div>
         <span class="card-badge">${f.tipo || 'Imóvel'}</span>
@@ -943,6 +974,21 @@ document.getElementById('modalClose').addEventListener('click', closeModal);
 document.getElementById('modalOverlay').addEventListener('click', e => { if (e.target === e.currentTarget) closeModal(); });
 document.getElementById('galleryPrev').addEventListener('click', () => goSlide(currentSlide - 1));
 document.getElementById('galleryNext').addEventListener('click', () => goSlide(currentSlide + 1));
+
+/* tela cheia */
+document.getElementById('galleryFullscreen').addEventListener('click', () => {
+  const gal = document.getElementById('gallery');
+  const icon = document.querySelector('#galleryFullscreen i');
+  if (!document.fullscreenElement) {
+    (gal.requestFullscreen || gal.webkitRequestFullscreen || gal.mozRequestFullScreen).call(gal);
+  } else {
+    (document.exitFullscreen || document.webkitExitFullscreen || document.mozCancelFullScreen).call(document);
+  }
+});
+document.addEventListener('fullscreenchange', () => {
+  const icon = document.querySelector('#galleryFullscreen i');
+  if (icon) icon.className = document.fullscreenElement ? 'fa fa-compress' : 'fa fa-expand';
+});
 document.addEventListener('keydown', e => {
   if (!document.getElementById('modalOverlay').classList.contains('open')) return;
   if (e.key === 'Escape')      closeModal();
