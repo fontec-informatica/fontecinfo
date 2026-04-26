@@ -497,6 +497,12 @@ if (file_exists($jsonFile)) {
     .footer-col ul { list-style: none; display: flex; flex-direction: column; gap: 8px; }
     .footer-col ul li a { font-size: .88rem; color: var(--muted); transition: color var(--trans); }
     .footer-col ul li a:hover { color: var(--accent); }
+    .footer-legal {
+      border-top: 1px solid var(--border); padding: 16px 0;
+      font-size: .78rem; color: var(--muted); line-height: 1.6;
+      display: flex; align-items: flex-start; gap: 10px;
+    }
+    .footer-legal i { color: var(--accent); margin-top: 2px; flex-shrink: 0; }
     .footer-bottom {
       border-top: 1px solid var(--border); padding-top: 20px;
       display: flex; align-items: center; justify-content: space-between;
@@ -650,6 +656,10 @@ if (file_exists($jsonFile)) {
         <li><a href="#">Anápolis · GO</a></li>
       </ul>
     </div>
+  </div>
+  <div class="footer-legal">
+    <i class="fa fa-shield-halved"></i>
+    <span>O conteúdo desta página — incluindo textos, imagens, descrições e dados de propriedades — é de propriedade exclusiva da <strong>Fontec Empreendimentos</strong>. É vedada a reprodução, parcial ou integral, sem autorização prévia e expressa. Todos os direitos reservados conforme a <strong>Lei nº 9.610/98</strong>.</span>
   </div>
   <div class="footer-bottom">
     <span>© 2026 Fontec Empreendimentos. Todos os direitos reservados.</span>
