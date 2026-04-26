@@ -543,7 +543,7 @@ if (file_exists($jsonFile)) {
       .grid { grid-template-columns: 1fr 1fr; gap: 16px; }
       .footer-grid { grid-template-columns: 1fr; gap: 28px; }
       .gallery { height: 240px; }
-      .modal { max-height: 95vh; }
+      .modal { max-height: none; }
       .modal-body { padding: 18px; }
       .modal-specs { grid-template-columns: 1fr 1fr; }
       .modal-title { font-size: 1.3rem; }
@@ -987,16 +987,6 @@ function updateDriveBlock() {
   document.getElementById('driveBlock').style.display = isDrive ? '' : 'none';
 }
 
-/* swipe horizontal na galeria */
-(function() {
-  let tx = 0;
-  const slides_ = document.getElementById('gallerySlides');
-  slides_.addEventListener('touchstart', e => { tx = e.touches[0].clientX; }, { passive: true });
-  slides_.addEventListener('touchend',   e => {
-    const dx = e.changedTouches[0].clientX - tx;
-    if (Math.abs(dx) > 50) dx < 0 ? goSlide(currentSlide + 1) : goSlide(currentSlide - 1);
-  }, { passive: true });
-})();
 document.addEventListener('keydown', e => {
   if (!document.getElementById('modalOverlay').classList.contains('open')) return;
   if (e.key === 'Escape')      closeModal();
