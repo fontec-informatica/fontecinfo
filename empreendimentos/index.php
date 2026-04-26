@@ -86,9 +86,9 @@ if (file_exists($jsonFile)) {
     }
     [data-theme="dark"] header { background: rgba(6,13,9,.9); }
 
-    .logo { display: flex; align-items: center; gap: 14px; cursor: default; }
+    .logo { display: flex; align-items: center; cursor: default; }
     .logo img {
-      height: 64px;
+      height: 234px;
       width: auto;
       object-fit: contain;
       mix-blend-mode: multiply;
@@ -96,26 +96,6 @@ if (file_exists($jsonFile)) {
     [data-theme="dark"] .logo img {
       mix-blend-mode: normal;
       filter: brightness(0) invert(1);
-    }
-    @media (max-width: 768px) { .logo img { height: 48px; } }
-
-    .logo-text { display: flex; flex-direction: column; line-height: 1.1; }
-    .logo-name {
-      font-family: 'Syne', sans-serif;
-      font-weight: 800; font-size: 1.15rem;
-      letter-spacing: .02em; color: var(--text);
-    }
-    .logo-sub {
-      font-size: .68rem; color: var(--muted);
-      letter-spacing: .04em; margin-top: 1px;
-    }
-    .logo-badge {
-      display: inline-block;
-      font-size: .58rem; font-weight: 700;
-      letter-spacing: .08em; text-transform: uppercase;
-      background: var(--accent); color: #fff;
-      padding: 2px 8px; border-radius: 20px;
-      margin-top: 4px; width: fit-content;
     }
 
     .header-right { display: flex; align-items: center; gap: 10px; }
@@ -536,11 +516,7 @@ if (file_exists($jsonFile)) {
     }
     @media (max-width: 768px) {
       header { height: 64px; padding: 0 4%; }
-      .logo { gap: 10px; }
-      .logo img { height: 44px; }
-      .logo-name { font-size: .95rem; }
-      .logo-sub { font-size: .6rem; }
-      .logo-badge { font-size: .52rem; padding: 2px 6px; }
+      .logo img { height: 188px; }
       .hero { padding: 100px 4% 60px; min-height: auto; }
       .hero h1 { font-size: clamp(1.6rem, 5vw, 2.4rem); }
       .hero p { font-size: .95rem; }
@@ -578,11 +554,6 @@ if (file_exists($jsonFile)) {
 <header>
   <div class="logo">
     <img src="../assets/img/logo.png?v=2" alt="Fontec Empreendimentos" />
-    <div class="logo-text">
-      <span class="logo-name">FONTEC</span>
-      <span class="logo-sub">Empreendimentos</span>
-      <span class="logo-badge">Imóveis Rurais</span>
-    </div>
   </div>
   <div class="header-right">
     <button class="theme-toggle" id="themeToggle" aria-label="Alternar tema">
