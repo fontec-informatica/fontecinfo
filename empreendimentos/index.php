@@ -86,7 +86,7 @@ if (file_exists($jsonFile)) {
     }
     [data-theme="dark"] header { background: rgba(6,13,9,.9); }
 
-    .logo { display: flex; align-items: center; cursor: default; }
+    .logo { display: flex; align-items: center; gap: 4px; cursor: default; }
     .logo img {
       height: 234px;
       width: auto;
@@ -96,6 +96,15 @@ if (file_exists($jsonFile)) {
     [data-theme="dark"] .logo img {
       mix-blend-mode: normal;
       filter: brightness(0) invert(1);
+    }
+    .logo-text { display: flex; flex-direction: column; line-height: 1.2; }
+    .logo-sub { font-size: .75rem; color: var(--muted); letter-spacing: .04em; }
+    .logo-badge {
+      display: inline-block; font-size: .6rem; font-weight: 700;
+      letter-spacing: .08em; text-transform: uppercase;
+      background: var(--accent); color: #fff;
+      padding: 2px 8px; border-radius: 20px;
+      margin-top: 4px; width: fit-content;
     }
 
     .header-right { display: flex; align-items: center; gap: 10px; }
@@ -554,6 +563,10 @@ if (file_exists($jsonFile)) {
 <header>
   <div class="logo">
     <img src="../assets/img/logo.png?v=2" alt="Fontec Empreendimentos" />
+    <div class="logo-text">
+      <span class="logo-sub">Empreendimentos</span>
+      <span class="logo-badge">Imóveis Rurais</span>
+    </div>
   </div>
   <div class="header-right">
     <button class="theme-toggle" id="themeToggle" aria-label="Alternar tema">
