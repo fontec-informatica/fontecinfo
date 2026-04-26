@@ -473,8 +473,8 @@ if (file_exists($jsonFile)) {
       gap: 40px; margin-bottom: 36px;
     }
     .footer-brand img {
-      height: 64px; width: auto; object-fit: contain;
-      mix-blend-mode: multiply; margin-bottom: 12px;
+      height: 200px; width: auto; object-fit: contain;
+      mix-blend-mode: multiply; margin-bottom: 4px;
     }
     [data-theme="dark"] .footer-brand img { mix-blend-mode: normal; filter: brightness(0) invert(1); }
     .footer-brand p { font-size: .88rem; color: var(--muted); line-height: 1.7; }
