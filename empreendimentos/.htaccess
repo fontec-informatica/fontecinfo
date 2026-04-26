@@ -1,0 +1,13 @@
+# Bloqueia acesso direto às pastas de dados e uploads
+<IfModule mod_rewrite.c>
+  RewriteEngine On
+
+  RewriteRule ^data/.*$    - [F,L]
+  RewriteRule ^uploads/.*$ - [F,L]
+</IfModule>
+
+# Fallback via FilesMatch para servidores sem mod_rewrite
+<FilesMatch "\.json$">
+  Order allow,deny
+  Deny from all
+</FilesMatch>
