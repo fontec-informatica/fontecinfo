@@ -269,9 +269,11 @@ $okMsg = match($ok) {
       background: var(--surface);
       border-bottom: 1px solid var(--border);
       padding: 0 5%;
+      height: 80px;
       display: flex; align-items: center; justify-content: space-between;
       position: sticky; top: 0; z-index: 50;
       box-shadow: var(--shadow);
+      overflow: visible;
     }
     .admin-brand { display: flex; align-items: center; gap: 4px; text-decoration: none; }
     .admin-brand img { height: 200px; width: auto; object-fit: contain; mix-blend-mode: multiply; -webkit-user-drag: none; }
@@ -541,8 +543,8 @@ $okMsg = match($ok) {
     .progress-label { font-size: .8rem; color: var(--muted); }
 
     @media (max-width: 768px) {
-      .admin-header { padding: 0 4%; }
-      .admin-brand img { height: 120px; }
+      .admin-header { padding: 0 4%; height: 64px; }
+      .admin-brand img { height: 100px; }
       .header-right .btn-sm span { display: none; }
       .form-grid { grid-template-columns: 1fr 1fr; }
       .upload-box { padding: 28px 20px; }
@@ -593,6 +595,7 @@ $okMsg = match($ok) {
     </div>
   </a>
   <div class="header-right">
+    <a href="admin.php" class="btn-sm"><i class="fa fa-plus"></i> <span>Nova propriedade</span></a>
     <a href="#sec-propriedades" class="btn-sm"><i class="fa fa-list"></i> <span>Propriedades</span></a>
     <a href="index.php" class="btn-sm" target="_blank"><i class="fa fa-eye"></i> <span>Ver site</span></a>
     <form method="POST" style="display:inline">
