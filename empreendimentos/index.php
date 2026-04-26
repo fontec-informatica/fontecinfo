@@ -530,8 +530,11 @@ if (file_exists($jsonFile)) {
     }
     @media (max-width: 768px) {
       header { height: 64px; padding: 0 4%; }
+      .logo { gap: 10px; }
       .logo img { height: 44px; }
-      .logo-text { display: none; }
+      .logo-name { font-size: .95rem; }
+      .logo-sub { font-size: .6rem; }
+      .logo-badge { font-size: .52rem; padding: 2px 6px; }
       .hero { padding: 100px 4% 60px; min-height: auto; }
       .hero h1 { font-size: clamp(1.6rem, 5vw, 2.4rem); }
       .hero p { font-size: .95rem; }
