@@ -22,6 +22,31 @@ function sanitize(string $v): string {
     return htmlspecialchars(strip_tags(trim($v)), ENT_QUOTES, 'UTF-8');
 }
 
+function generateThumb(string $src, string $dest, int $w = 420, int $h = 280): void {
+    if (!function_exists('imagecreatefromjpeg')) return;
+    $info = @getimagesize($src);
+    if (!$info) return;
+    [$srcW, $srcH, $type] = [$info[0], $info[1], $info[2]];
+    $img = match($type) {
+        IMAGETYPE_JPEG => @imagecreatefromjpeg($src),
+        IMAGETYPE_PNG  => @imagecreatefrompng($src),
+        IMAGETYPE_WEBP => function_exists('imagecreatefromwebp') ? @imagecreatefromwebp($src) : false,
+        IMAGETYPE_GIF  => @imagecreatefromgif($src),
+        default        => false,
+    };
+    if (!$img) return;
+    $ratio  = max($w / $srcW, $h / $srcH);
+    $cropW  = (int)round($w / $ratio);
+    $cropH  = (int)round($h / $ratio);
+    $offX   = (int)(($srcW - $cropW) / 2);
+    $offY   = (int)(($srcH - $cropH) / 2);
+    $thumb  = imagecreatetruecolor($w, $h);
+    imagecopyresampled($thumb, $img, 0, 0, $offX, $offY, $w, $h, $cropW, $cropH);
+    imagejpeg($thumb, $dest, 82);
+    imagedestroy($img);
+    imagedestroy($thumb);
+}
+
 function uploadFiles(string $field, array $allowed, string $prefix): array {
     $result = [];
     if (empty($_FILES[$field]['name'][0])) return $result;
@@ -33,16 +58,24 @@ function uploadFiles(string $field, array $allowed, string $prefix): array {
         if (!in_array($types[$i], $allowed)) continue;
         $ext  = pathinfo($name, PATHINFO_EXTENSION);
         $safe = $prefix . '_' . uniqid() . '.' . strtolower($ext);
-        if (move_uploaded_file($tmps[$i], UPLOAD_DIR . $safe)) {
+        $dest = UPLOAD_DIR . $safe;
+        if (move_uploaded_file($tmps[$i], $dest)) {
             $result[] = $safe;
+            /* gera miniatura para o painel admin (carregamento rápido) */
+            if (in_array($types[$i], ['image/jpeg','image/png','image/webp','image/gif'])) {
+                generateThumb($dest, UPLOAD_DIR . 'thumb_' . $safe);
+            }
         }
     }
     return $result;
 }
 
 function deleteFile(string $filename): void {
-    $path = UPLOAD_DIR . basename($filename);
-    if (file_exists($path)) unlink($path);
+    $base  = basename($filename);
+    $path  = UPLOAD_DIR . $base;
+    $thumb = UPLOAD_DIR . 'thumb_' . $base;
+    if (file_exists($path))  unlink($path);
+    if (file_exists($thumb)) unlink($thumb);
 }
 
 function newId(): string {
@@ -635,7 +668,12 @@ $okMsg = match($ok) {
             <?php foreach ($editRow['fotos'] as $foto): ?>
               <div class="foto-thumb" id="thumb_<?= md5($foto) ?>">
                 <div class="foto-thumb-img">
-                  <img src="uploads/<?= htmlspecialchars($foto) ?>" alt="" />
+                  <?php
+                  $thumbFile = file_exists(UPLOAD_DIR . 'thumb_' . $foto)
+                    ? 'uploads/thumb_' . $foto
+                    : 'uploads/' . $foto;
+                  ?>
+                  <img src="<?= htmlspecialchars($thumbFile) ?>" alt="" loading="lazy" decoding="async" />
                 </div>
                 <button type="button" class="foto-del-btn" onclick="toggleDelFoto('<?= md5($foto) ?>', '<?= htmlspecialchars($foto) ?>')">
                   <i class="fa fa-trash"></i> Remover
