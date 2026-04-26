@@ -193,6 +193,13 @@ if (!empty($_SESSION['admin'])) {
             $fazenda['fotos'] = array_values(array_filter($fazenda['fotos'], fn($x) => !in_array($x, $delFotos)));
         }
 
+        /* reordenar fotos */
+        if (!empty($_POST['foto_order'])) {
+            $cur     = $fazenda['fotos'];
+            $ordered = array_values(array_filter($_POST['foto_order'], fn($f) => in_array($f, $cur)));
+            if (count($ordered) === count($cur)) $fazenda['fotos'] = $ordered;
+        }
+
         if ($isNew) {
             $rows[] = $fazenda;
         } else {
@@ -428,13 +435,21 @@ $okMsg = match($ok) {
     }
     .foto-thumb {
       display: flex; flex-direction: column; align-items: center; gap: 5px;
+      cursor: grab; user-select: none;
+    }
+    .foto-thumb:active { cursor: grabbing; }
+    .foto-thumb.dragging { opacity: .35; }
+    .foto-thumb.drag-over .foto-thumb-img { border-color: var(--accent); box-shadow: 0 0 0 2px var(--accent2); }
+    .foto-drag-handle {
+      font-size: .65rem; color: var(--muted); letter-spacing: .04em;
+      display: flex; align-items: center; gap: 3px;
     }
     .foto-thumb-img {
       position: relative; width: 90px; height: 70px;
       border-radius: var(--radius-sm); overflow: hidden;
-      border: 1.5px solid var(--border); transition: border-color .2s, opacity .2s;
+      border: 1.5px solid var(--border); transition: border-color .2s, opacity .2s, box-shadow .2s;
     }
-    .foto-thumb-img img { width: 100%; height: 100%; object-fit: cover; }
+    .foto-thumb-img img { width: 100%; height: 100%; object-fit: cover; pointer-events: none; }
     .foto-thumb.marcada .foto-thumb-img { border-color: var(--danger); opacity: .4; }
     .foto-del-btn {
       font-size: .7rem; color: var(--danger);
@@ -663,10 +678,11 @@ $okMsg = match($ok) {
         <!-- FOTOS EXISTENTES -->
         <?php if (!empty($editRow['fotos'])): ?>
         <div class="field field-full">
-          <label>Fotos atuais <small style="color:var(--muted)">(clique para marcar remoção)</small></label>
-          <div class="fotos-preview">
+          <label>Fotos atuais <small style="color:var(--muted)"> — arraste para reordenar · clique em Remover para excluir</small></label>
+          <div class="fotos-preview" id="fotos-preview">
             <?php foreach ($editRow['fotos'] as $foto): ?>
-              <div class="foto-thumb" id="thumb_<?= md5($foto) ?>">
+              <div class="foto-thumb" id="thumb_<?= md5($foto) ?>" draggable="true">
+                <div class="foto-drag-handle"><i class="fa fa-grip-dots-vertical"></i> mover</div>
                 <div class="foto-thumb-img">
                   <?php
                   $thumbFile = file_exists(UPLOAD_DIR . 'thumb_' . $foto)
@@ -679,6 +695,7 @@ $okMsg = match($ok) {
                   <i class="fa fa-trash"></i> Remover
                 </button>
                 <input type="checkbox" name="del_fotos[]" id="cb_<?= md5($foto) ?>" value="<?= htmlspecialchars($foto) ?>" />
+                <input type="hidden" name="foto_order[]" value="<?= htmlspecialchars($foto) ?>" />
               </div>
             <?php endforeach; ?>
           </div>
@@ -864,6 +881,38 @@ $okMsg = match($ok) {
     if (b < 1048576)    return (b/1024).toFixed(1) + ' KB';
     return (b/1048576).toFixed(1) + ' MB';
   }
+
+  /* ── REORDENAR FOTOS (drag-and-drop) ── */
+  (function() {
+    const list = document.getElementById('fotos-preview');
+    if (!list) return;
+    let dragging = null;
+
+    list.addEventListener('dragstart', e => {
+      dragging = e.target.closest('.foto-thumb');
+      if (!dragging) return;
+      setTimeout(() => dragging.classList.add('dragging'), 0);
+    });
+    list.addEventListener('dragend', () => {
+      if (dragging) dragging.classList.remove('dragging');
+      list.querySelectorAll('.foto-thumb').forEach(el => el.classList.remove('drag-over'));
+      dragging = null;
+    });
+    list.addEventListener('dragover', e => {
+      e.preventDefault();
+      const target = e.target.closest('.foto-thumb');
+      if (!target || target === dragging) return;
+      list.querySelectorAll('.foto-thumb').forEach(el => el.classList.remove('drag-over'));
+      target.classList.add('drag-over');
+      const rect = target.getBoundingClientRect();
+      if (e.clientX < rect.left + rect.width / 2) {
+        list.insertBefore(dragging, target);
+      } else {
+        list.insertBefore(dragging, target.nextSibling);
+      }
+    });
+    list.addEventListener('drop', e => e.preventDefault());
+  })();
 
   /* ── DELETE FOTO ── */
   function toggleDelFoto(hash, filename) {
