@@ -273,14 +273,15 @@ $okMsg = match($ok) {
       position: sticky; top: 0; z-index: 50;
       box-shadow: var(--shadow);
     }
-    .admin-brand { display: flex; align-items: center; gap: 10px; }
-    .admin-brand img { height: 38px; mix-blend-mode: multiply; }
+    .admin-brand { display: flex; align-items: center; gap: 4px; }
+    .admin-brand img { height: 120px; width: auto; object-fit: contain; mix-blend-mode: multiply; -webkit-user-drag: none; }
     [data-theme="dark"] .admin-brand img { mix-blend-mode: normal; filter: brightness(0) invert(1); }
-    .admin-brand-text { font-family: 'Syne', sans-serif; font-size: 1rem; font-weight: 700; }
+    .admin-brand-text { font-family: 'Syne', sans-serif; line-height: 1.2; }
+    .admin-brand-name { font-size: .82rem; color: var(--muted); letter-spacing: .04em; display: block; }
     .admin-brand-badge {
-      font-size: .6rem; font-weight: 700; letter-spacing: .06em;
+      display: inline-block; font-size: .58rem; font-weight: 700; letter-spacing: .08em;
       background: var(--accent); color: #fff;
-      padding: 2px 8px; border-radius: 12px; text-transform: uppercase;
+      padding: 2px 8px; border-radius: 12px; text-transform: uppercase; margin-top: 4px;
     }
     .header-right { display: flex; align-items: center; gap: 10px; }
     .btn-sm {
@@ -540,8 +541,8 @@ $okMsg = match($ok) {
     .progress-label { font-size: .8rem; color: var(--muted); }
 
     @media (max-width: 768px) {
-      .admin-header { padding: 0 4%; height: 56px; }
-      .admin-brand-text { font-size: .9rem; }
+      .admin-header { padding: 0 4%; height: auto; min-height: 56px; }
+      .admin-brand img { height: 80px; }
       .header-right .btn-sm span { display: none; }
       .form-grid { grid-template-columns: 1fr 1fr; }
       .upload-box { padding: 28px 20px; }
@@ -585,10 +586,10 @@ $okMsg = match($ok) {
 <!-- ════════════════ PAINEL ════════════════ -->
 <header class="admin-header">
   <div class="admin-brand">
-    <img src="../assets/img/logo.png?v=2" alt="FONTEC" />
-    <div>
-      <div class="admin-brand-text">FONTEC</div>
-      <span class="admin-brand-badge">Admin</span>
+    <img src="../assets/img/logo.png?v=2" alt="Fontec Empreendimentos" />
+    <div class="admin-brand-text">
+      <span class="admin-brand-name">Empreendimentos</span>
+      <span class="admin-brand-badge">Painel Admin</span>
     </div>
   </div>
   <div class="header-right">
