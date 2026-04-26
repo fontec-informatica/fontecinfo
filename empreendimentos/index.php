@@ -68,8 +68,23 @@ if (file_exists($jsonFile)) {
       transition: background var(--trans), color var(--trans);
       overflow-x: hidden;
     }
-    img { max-width: 100%; display: block; }
+    img { max-width: 100%; display: block; -webkit-user-drag: none; user-drag: none; }
     a { text-decoration: none; color: inherit; }
+
+    /* ── ANTI-CÓPIA GLOBAL ── */
+    body, img, p, h1, h2, h3, span, div {
+      -webkit-user-select: none;
+      -moz-user-select: none;
+      user-select: none;
+    }
+    @media print {
+      body::before {
+        content: '© Fontec Empreendimentos — Reprodução não autorizada. Lei nº 9.610/98.';
+        display: block; text-align: center; padding: 40px;
+        font-size: 1.2rem; font-weight: bold; color: #1a6b42;
+      }
+      img, .gallery, .card-thumb { display: none !important; }
+    }
 
     /* ── HEADER ── */
     header {
@@ -1035,11 +1050,18 @@ window.addEventListener('scroll', () => {
 scrollTopBtn.addEventListener('click', () => window.scrollTo({ top: 0, behavior: 'smooth' }));
 
 /* ── ANTI-CÓPIA ── */
-document.addEventListener('contextmenu', e => e.preventDefault());
-document.addEventListener('selectstart', e => e.preventDefault());
+document.addEventListener('contextmenu',  e => e.preventDefault());
+document.addEventListener('selectstart',  e => e.preventDefault());
+document.addEventListener('dragstart',    e => e.preventDefault());
+document.addEventListener('copy',         e => e.preventDefault());
+document.addEventListener('cut',          e => e.preventDefault());
 document.addEventListener('keydown', e => {
+  const k = e.key.toLowerCase();
   if (e.key === 'F12') { e.preventDefault(); return false; }
-  if ((e.ctrlKey || e.metaKey) && ['u','s','p','i'].includes(e.key.toLowerCase())) e.preventDefault();
+  /* Ctrl/Cmd: U=view-source, S=save, P=print, A=select-all, C=copy, X=cut */
+  if ((e.ctrlKey || e.metaKey) && ['u','s','p','a','c','x'].includes(k)) { e.preventDefault(); return false; }
+  /* Ctrl+Shift: I=devtools, J=console, C=inspector, K=console (Firefox) */
+  if ((e.ctrlKey || e.metaKey) && e.shiftKey && ['i','j','c','k'].includes(k)) { e.preventDefault(); return false; }
 });
 </script>
 </body>
