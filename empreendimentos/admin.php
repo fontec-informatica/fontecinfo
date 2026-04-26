@@ -656,8 +656,15 @@ $okMsg = match($ok) {
         </div>
 
         <div class="field field-full">
-          <label>Link YouTube (alternativo ao upload)</label>
-          <input type="url" name="video_link" value="<?= htmlspecialchars($editRow['video_link'] ?? '') ?>" placeholder="https://www.youtube.com/watch?v=..." />
+          <label>Link do vídeo <small style="color:var(--muted)"> — YouTube, Google Drive ou Vimeo (prioridade sobre upload)</small></label>
+          <input type="url" name="video_link" value="<?= htmlspecialchars($editRow['video_link'] ?? '') ?>" placeholder="YouTube, Google Drive ou Vimeo..." />
+          <div style="margin-top:8px;padding:12px 14px;background:var(--bg2);border-radius:var(--radius-sm);font-size:.8rem;color:var(--muted);line-height:1.7;">
+            <strong style="color:var(--text)">Como obter o link do Google Drive:</strong><br>
+            1. Clique com botão direito no vídeo no Drive → <em>Compartilhar</em><br>
+            2. Em "Acesso geral" selecione <em>"Qualquer pessoa com o link"</em><br>
+            3. Clique em <em>Copiar link</em> e cole aqui<br>
+            <small>Formatos aceitos: <code>drive.google.com/file/d/ID/view</code> ou <code>drive.google.com/open?id=ID</code></small>
+          </div>
         </div>
 
         <div class="field field-full">

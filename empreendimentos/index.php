@@ -600,20 +600,20 @@ function buildWatermark(container, w, h) {
   const canvas = document.createElement('canvas');
   canvas.width  = w || container.offsetWidth  || 400;
   canvas.height = h || container.offsetHeight || 300;
-  canvas.style.cssText = 'position:absolute;inset:0;width:100%;height:100%;pointer-events:none;user-select:none;';
+  canvas.style.cssText = 'position:absolute;inset:0;width:100%;height:100%;pointer-events:none;user-select:none;display:block;';
   const ctx = canvas.getContext('2d');
   const text = '© Fontec Empreendimentos';
-  ctx.font = 'bold 14px DM Sans, sans-serif';
-  ctx.fillStyle = 'rgba(255,255,255,0.28)';
-  ctx.strokeStyle = 'rgba(0,0,0,0.12)';
-  ctx.lineWidth = 0.5;
+  ctx.font = 'bold 13px Arial, sans-serif';
+  ctx.fillStyle = 'rgba(255,255,255,0.30)';
+  ctx.strokeStyle = 'rgba(0,0,0,0.15)';
+  ctx.lineWidth = 0.6;
   ctx.textAlign = 'center';
   ctx.save();
   ctx.translate(canvas.width / 2, canvas.height / 2);
   ctx.rotate(-30 * Math.PI / 180);
-  const stepX = 200, stepY = 80;
-  const cols = Math.ceil(canvas.width  / stepX) + 2;
-  const rows = Math.ceil(canvas.height / stepY) + 2;
+  const stepX = 190, stepY = 75;
+  const cols = Math.ceil(canvas.width  / stepX) + 3;
+  const rows = Math.ceil(canvas.height / stepY) + 3;
   for (let r = -rows; r <= rows; r++) {
     for (let c = -cols; c <= cols; c++) {
       const x = c * stepX + (r % 2 === 0 ? 0 : stepX / 2);
@@ -623,7 +623,7 @@ function buildWatermark(container, w, h) {
     }
   }
   ctx.restore();
-  container.style.position = 'relative';
+  /* NÃO sobrescreve position — container já tem position:absolute via CSS */
   container.appendChild(canvas);
 }
 
@@ -707,6 +707,38 @@ document.querySelectorAll('.filter-btn').forEach(btn => {
 let currentSlide = 0;
 let slides = [];
 
+/* ── RESOLVE URL DE VÍDEO ── */
+function resolveVideoEmbed(url) {
+  if (!url) return { type: 'file' };
+
+  /* YouTube */
+  if (url.includes('youtube.com') || url.includes('youtu.be')) {
+    let src = url;
+    const match = url.match(/(?:v=|youtu\.be\/)([a-zA-Z0-9_-]{11})/);
+    src = match ? `https://www.youtube.com/embed/${match[1]}?rel=0&modestbranding=1` : url;
+    return { type: 'iframe', src };
+  }
+
+  /* Google Drive — converte qualquer formato para /preview */
+  if (url.includes('drive.google.com')) {
+    let fileId = null;
+    const m1 = url.match(/\/file\/d\/([a-zA-Z0-9_-]+)/);
+    const m2 = url.match(/[?&]id=([a-zA-Z0-9_-]+)/);
+    if (m1) fileId = m1[1];
+    else if (m2) fileId = m2[1];
+    if (fileId) return { type: 'iframe', src: `https://drive.google.com/file/d/${fileId}/preview` };
+  }
+
+  /* Vimeo */
+  if (url.includes('vimeo.com')) {
+    const match = url.match(/vimeo\.com\/(\d+)/);
+    if (match) return { type: 'iframe', src: `https://player.vimeo.com/video/${match[1]}?byline=0&portrait=0` };
+  }
+
+  /* arquivo local */
+  return { type: 'file' };
+}
+
 function openModal(idx) {
   const f = fazendas[idx];
   if (!f) return;
@@ -736,14 +768,11 @@ function openModal(idx) {
 
   /* slides */
   slides = [];
-  (f.fotos || []).forEach(foto => slides.push({ type: 'img',   src: 'uploads/' + foto }));
+  (f.fotos || []).forEach(foto => slides.push({ type: 'img', src: 'uploads/' + foto }));
   if (f.video) {
-    if (f.video.includes('youtube') || f.video.includes('youtu.be')) {
-      const vid = f.video.replace('watch?v=','embed/').replace('youtu.be/','youtube.com/embed/');
-      slides.push({ type: 'yt', src: vid });
-    } else {
-      slides.push({ type: 'video', src: 'uploads/' + f.video });
-    }
+    const embedSrc = resolveVideoEmbed(f.video);
+    if (embedSrc.type === 'iframe') slides.push({ type: 'yt',    src: embedSrc.src });
+    else if (embedSrc.type === 'file') slides.push({ type: 'video', src: 'uploads/' + f.video });
   }
 
   const slidesEl = document.getElementById('gallerySlides');
