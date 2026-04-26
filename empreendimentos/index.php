@@ -403,8 +403,9 @@ if (file_exists($jsonFile)) {
     .gallery-slide {
       min-width: 100%; height: 100%;
       object-fit: cover; flex-shrink: 0;
+      cursor: zoom-in;
     }
-    .gallery-slide.video-slide { min-width: 100%; height: 100%; border: none; flex-shrink: 0; }
+    .gallery-slide.video-slide { min-width: 100%; height: 100%; border: none; flex-shrink: 0; cursor: default; }
 
     /* MARCA D'ÁGUA NA GALERIA */
     .gallery-wm {
@@ -667,7 +668,6 @@ if (file_exists($jsonFile)) {
     <div class="gallery" id="gallery">
       <div class="gallery-slides" id="gallerySlides"></div>
       <div class="gallery-wm" id="galleryWm"></div>
-      <button class="gallery-fullscreen" id="galleryFullscreen" aria-label="Tela cheia" title="Tela cheia"><i class="fa fa-expand"></i></button>
       <button class="gallery-nav prev" id="galleryPrev" aria-label="Anterior"><i class="fa fa-chevron-left"></i></button>
       <button class="gallery-nav next" id="galleryNext" aria-label="Próximo"><i class="fa fa-chevron-right"></i></button>
       <div class="gallery-dots" id="galleryDots"></div>
@@ -771,7 +771,7 @@ function renderCards(list) {
     const fotoCount = f.fotos ? f.fotos.length : 0;
     const hasVideo  = !!f.video;
     const countBadge = fotoCount > 1 ? `<span class="card-count"><i class="fa fa-images"></i> ${fotoCount}${hasVideo?' + vídeo':''}</span>` : '';
-    const videoBadge = hasVideo ? `<span class="card-video-badge"><i class="fa fa-play-circle"></i> Vídeo disponível</span>` : '';
+    const videoBadge = '';
 
     const alqInfo = f.alqueires ? `<span class="card-spec"><i class="fa fa-ruler-combined"></i> ${f.alqueires} alq</span>` : '';
     const haInfo  = f.hectares  ? `<span class="card-spec"><i class="fa fa-expand-arrows-alt"></i> ${f.hectares} ha</span>` : '';
@@ -793,7 +793,8 @@ function renderCards(list) {
         <div class="card-location"><i class="fa fa-map-pin"></i> ${f.cidade||''}${f.estado?', '+f.estado:''}</div>
         <div class="card-specs">
           ${alqInfo}${haInfo}
-          ${f.agua ? `<span class="card-spec"><i class="fa fa-water"></i> ${f.agua}</span>` : ''}
+          ${f.agua  ? `<span class="card-spec"><i class="fa fa-water"></i> ${f.agua}</span>`  : ''}
+          ${f.solo  ? `<span class="card-spec"><i class="fa fa-leaf"></i> ${f.solo}</span>`   : ''}
         </div>
         <div class="card-price">${fmtPrice(f.preco)}</div>
         <div class="card-btns">
@@ -975,10 +976,11 @@ document.getElementById('modalOverlay').addEventListener('click', e => { if (e.t
 document.getElementById('galleryPrev').addEventListener('click', () => goSlide(currentSlide - 1));
 document.getElementById('galleryNext').addEventListener('click', () => goSlide(currentSlide + 1));
 
-/* tela cheia */
-document.getElementById('galleryFullscreen').addEventListener('click', () => {
+/* tela cheia ao clicar na imagem da galeria */
+document.getElementById('gallerySlides').addEventListener('click', e => {
+  const slide = e.target.closest('.gallery-slide');
+  if (!slide || slide.tagName === 'IFRAME' || slide.tagName === 'VIDEO') return;
   const gal = document.getElementById('gallery');
-  const icon = document.querySelector('#galleryFullscreen i');
   if (!document.fullscreenElement) {
     (gal.requestFullscreen || gal.webkitRequestFullscreen || gal.mozRequestFullScreen).call(gal);
   } else {
@@ -986,8 +988,8 @@ document.getElementById('galleryFullscreen').addEventListener('click', () => {
   }
 });
 document.addEventListener('fullscreenchange', () => {
-  const icon = document.querySelector('#galleryFullscreen i');
-  if (icon) icon.className = document.fullscreenElement ? 'fa fa-compress' : 'fa fa-expand';
+  const gal = document.getElementById('gallery');
+  if (gal) gal.style.cursor = document.fullscreenElement ? 'zoom-out' : 'zoom-in';
 });
 document.addEventListener('keydown', e => {
   if (!document.getElementById('modalOverlay').classList.contains('open')) return;
