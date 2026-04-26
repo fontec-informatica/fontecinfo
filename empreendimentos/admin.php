@@ -491,11 +491,23 @@ $okMsg = match($ok) {
     }
     .progress-label { font-size: .8rem; color: var(--muted); }
 
+    @media (max-width: 768px) {
+      .admin-header { padding: 0 4%; height: 56px; }
+      .admin-brand-text { font-size: .9rem; }
+      .header-right .btn-sm span { display: none; }
+      .form-grid { grid-template-columns: 1fr 1fr; }
+      .upload-box { padding: 28px 20px; }
+    }
     @media (max-width: 640px) {
-      .admin-main { padding: 24px 4%; }
-      .form-card  { padding: 20px; }
+      .admin-main { padding: 20px 4%; }
+      .form-card  { padding: 16px; }
       .form-grid  { grid-template-columns: 1fr; }
-      th, td { padding: 10px 12px; }
+      .admin-top  { flex-direction: column; align-items: flex-start; }
+      th, td { padding: 9px 10px; font-size: .82rem; }
+      .td-actions { gap: 5px; }
+      /* esconde colunas menos importantes em tela pequena */
+      th:nth-child(4), td:nth-child(4),
+      th:nth-child(6), td:nth-child(6) { display: none; }
     }
   </style>
 </head>
@@ -797,8 +809,7 @@ $okMsg = match($ok) {
       pct.textContent  = '100%';
       lbl.textContent  = 'Concluído!';
       sub.textContent  = 'Redirecionando…';
-      /* redireciona para a URL retornada (header Location do PHP) */
-      window.location.href = xhr.responseURL || 'admin.php?ok=save';
+      setTimeout(() => { window.location.href = 'admin.php?ok=save'; }, 400);
     });
 
     xhr.addEventListener('error', () => {
@@ -806,7 +817,7 @@ $okMsg = match($ok) {
       alert('Erro no envio. Verifique sua conexão e tente novamente.');
     });
 
-    xhr.open('POST', form.action || 'admin.php');
+    xhr.open('POST', 'admin.php');
     xhr.send(fd);
   }
 

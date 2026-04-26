@@ -445,16 +445,41 @@ if (file_exists($jsonFile)) {
     .whatsapp-float svg { width: 28px; height: 28px; position: relative; }
 
     /* ── RESPONSIVO ── */
+    @media (max-width: 900px) {
+      .grid { grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); }
+    }
     @media (max-width: 768px) {
+      header { height: 64px; padding: 0 4%; }
+      .logo img { height: 44px; }
+      .logo-text { display: none; }
+      .hero { padding: 100px 4% 60px; min-height: auto; }
+      .hero h1 { font-size: clamp(1.6rem, 5vw, 2.4rem); }
+      .hero p { font-size: .95rem; }
+      .hero-stats { gap: 20px; }
+      .hero-stat strong { font-size: 1.4rem; }
+      .filters-bar { padding: 28px 4% 0; gap: 8px; }
+      .filter-btn { padding: 7px 14px; font-size: .82rem; }
+      .grid-section { padding: 28px 4% 60px; }
+      .grid { grid-template-columns: 1fr 1fr; gap: 16px; }
       .footer-grid { grid-template-columns: 1fr; gap: 28px; }
-      .gallery { height: 260px; }
+      .gallery { height: 240px; }
+      .modal { max-height: 95vh; }
+      .modal-body { padding: 18px; }
       .modal-specs { grid-template-columns: 1fr 1fr; }
+      .modal-title { font-size: 1.3rem; }
+      .modal-price { font-size: 1.5rem; }
       .hero-stats { gap: 24px; }
     }
     @media (max-width: 480px) {
-      .grid { grid-template-columns: 1fr; }
-      .modal-title { font-size: 1.3rem; }
-      .modal-price { font-size: 1.5rem; }
+      .grid { grid-template-columns: 1fr; gap: 16px; }
+      .card-thumb { height: 200px; }
+      .gallery { height: 200px; }
+      .modal-specs { grid-template-columns: 1fr; }
+      .filters-bar { gap: 6px; }
+      .filter-btn { padding: 6px 12px; font-size: .78rem; }
+      .hero-stats { flex-wrap: wrap; gap: 16px; }
+      .hero-stat { min-width: 80px; }
+      .footer-grid { gap: 20px; }
     }
   </style>
 </head>
@@ -681,12 +706,14 @@ function renderCards(list) {
     </article>`;
   }).join('');
 
-  /* aplica marca d'água em cada card com imagem */
-  list.forEach((f, i) => {
-    if (f.fotos && f.fotos.length) {
-      const wmEl = document.getElementById('cwm_' + i);
-      if (wmEl) buildWatermark(wmEl, 320, 220);
-    }
+  /* aplica marca d'água de forma assíncrona para não travar a renderização */
+  requestAnimationFrame(() => {
+    list.forEach((f, i) => {
+      if (f.fotos && f.fotos.length) {
+        const wmEl = document.getElementById('cwm_' + i);
+        if (wmEl) buildWatermark(wmEl, 320, 220);
+      }
+    });
   });
 }
 
