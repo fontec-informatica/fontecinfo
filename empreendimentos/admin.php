@@ -268,16 +268,16 @@ $okMsg = match($ok) {
     .admin-header {
       background: var(--surface);
       border-bottom: 1px solid var(--border);
-      padding: 0 5%; height: 64px;
+      padding: 0 5%;
       display: flex; align-items: center; justify-content: space-between;
       position: sticky; top: 0; z-index: 50;
       box-shadow: var(--shadow);
     }
-    .admin-brand { display: flex; align-items: center; gap: 4px; }
-    .admin-brand img { height: 120px; width: auto; object-fit: contain; mix-blend-mode: multiply; -webkit-user-drag: none; }
+    .admin-brand { display: flex; align-items: center; gap: 4px; text-decoration: none; }
+    .admin-brand img { height: 200px; width: auto; object-fit: contain; mix-blend-mode: multiply; -webkit-user-drag: none; }
     [data-theme="dark"] .admin-brand img { mix-blend-mode: normal; filter: brightness(0) invert(1); }
-    .admin-brand-text { font-family: 'Syne', sans-serif; line-height: 1.2; }
-    .admin-brand-name { font-size: .82rem; color: var(--muted); letter-spacing: .04em; display: block; }
+    .admin-brand-text { line-height: 1.2; }
+    .admin-brand-name { font-size: .78rem; color: var(--muted); letter-spacing: .04em; display: block; }
     .admin-brand-badge {
       display: inline-block; font-size: .58rem; font-weight: 700; letter-spacing: .08em;
       background: var(--accent); color: #fff;
@@ -541,8 +541,8 @@ $okMsg = match($ok) {
     .progress-label { font-size: .8rem; color: var(--muted); }
 
     @media (max-width: 768px) {
-      .admin-header { padding: 0 4%; height: auto; min-height: 56px; }
-      .admin-brand img { height: 80px; }
+      .admin-header { padding: 0 4%; }
+      .admin-brand img { height: 120px; }
       .header-right .btn-sm span { display: none; }
       .form-grid { grid-template-columns: 1fr 1fr; }
       .upload-box { padding: 28px 20px; }
@@ -585,17 +585,18 @@ $okMsg = match($ok) {
 <?php else: ?>
 <!-- ════════════════ PAINEL ════════════════ -->
 <header class="admin-header">
-  <div class="admin-brand">
+  <a href="admin.php" class="admin-brand" title="Nova propriedade">
     <img src="../assets/img/logo.png?v=2" alt="Fontec Empreendimentos" />
     <div class="admin-brand-text">
       <span class="admin-brand-name">Empreendimentos</span>
       <span class="admin-brand-badge">Painel Admin</span>
     </div>
-  </div>
+  </a>
   <div class="header-right">
-    <a href="index.php" class="btn-sm" target="_blank"><i class="fa fa-eye"></i> Ver site</a>
+    <a href="#sec-propriedades" class="btn-sm"><i class="fa fa-list"></i> <span>Propriedades</span></a>
+    <a href="index.php" class="btn-sm" target="_blank"><i class="fa fa-eye"></i> <span>Ver site</span></a>
     <form method="POST" style="display:inline">
-      <button name="logout" class="btn-sm btn-danger"><i class="fa fa-sign-out-alt"></i> Sair</button>
+      <button name="logout" class="btn-sm btn-danger"><i class="fa fa-sign-out-alt"></i> <span>Sair</span></button>
     </form>
   </div>
 </header>
@@ -770,7 +771,7 @@ $okMsg = match($ok) {
   </div>
 
   <!-- TABELA -->
-  <div class="admin-top">
+  <div class="admin-top" id="sec-propriedades">
     <h1>Propriedades cadastradas <small style="font-size:.8rem;font-weight:400;color:var(--muted)">(<?= count($rows) ?>)</small></h1>
     <a href="#form-section" class="btn-sm"><i class="fa fa-arrow-up"></i> Nova propriedade</a>
   </div>
