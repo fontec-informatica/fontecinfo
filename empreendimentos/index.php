@@ -320,13 +320,13 @@ if (file_exists($jsonFile)) {
     }
     /* dot de vídeo na galeria */
     .gallery-dot.is-video {
-      background: rgba(220,38,38,.55);
+      background: rgba(26,107,66,.55);
       width: 28px; border-radius: 5px;
       font-size: .55rem; line-height: 8px;
       display: flex; align-items: center; justify-content: center;
       color: rgba(255,255,255,.8);
     }
-    .gallery-dot.is-video.active { background: #dc2626; color: #fff; }
+    .gallery-dot.is-video.active { background: var(--accent); color: #fff; }
     /* botão ir ao vídeo no modal */
     .btn-goto-video {
       display: flex; align-items: center; justify-content: center; gap: 8px;
@@ -358,6 +358,28 @@ if (file_exists($jsonFile)) {
     .gallery:fullscreen          { width: 100vw; height: 100vh; border-radius: 0; }
     .gallery:fullscreen .gallery-slides { height: 100%; }
     .gallery:fullscreen .gallery-slide  { object-fit: contain; background: #000; }
+
+    /* bloqueia barra de download do Google Drive no iframe */
+    .drive-block {
+      position: absolute; bottom: 0; left: 0; right: 0;
+      height: 48px; z-index: 4;
+      pointer-events: none;
+      background: #000;
+    }
+
+    /* indicador de swipe no mobile */
+    .modal-swipe-hint {
+      display: none;
+      width: 40px; height: 4px; border-radius: 2px;
+      background: var(--border);
+      margin: 8px auto 0;
+    }
+    @media (max-width: 768px) {
+      .modal-swipe-hint { display: block; }
+      .modal { border-radius: var(--radius) var(--radius) 0 0; }
+      .modal-overlay { align-items: flex-end; padding: 0; }
+      .modal-overlay.open { display: flex; }
+    }
 
     /* ── EMPTY STATE ── */
     .empty-state {
@@ -664,10 +686,12 @@ if (file_exists($jsonFile)) {
 <!-- MODAL -->
 <div class="modal-overlay" id="modalOverlay">
   <div class="modal" id="modal">
+    <div class="modal-swipe-hint" id="swipeHint"></div>
     <button class="modal-close" id="modalClose" aria-label="Fechar"><i class="fa fa-times"></i></button>
     <div class="gallery" id="gallery">
       <div class="gallery-slides" id="gallerySlides"></div>
       <div class="gallery-wm" id="galleryWm"></div>
+      <div class="drive-block" id="driveBlock" style="display:none"></div>
       <button class="gallery-nav prev" id="galleryPrev" aria-label="Anterior"><i class="fa fa-chevron-left"></i></button>
       <button class="gallery-nav next" id="galleryNext" aria-label="Próximo"><i class="fa fa-chevron-right"></i></button>
       <div class="gallery-dots" id="galleryDots"></div>
@@ -962,9 +986,13 @@ function goSlide(n) {
   currentSlide = (n + slides.length) % slides.length;
   document.getElementById('gallerySlides').style.transform = `translateX(-${currentSlide * 100}%)`;
   document.querySelectorAll('.gallery-dot').forEach((d, i) => d.classList.toggle('active', i === currentSlide));
+  if (typeof updateDriveBlock === 'function') updateDriveBlock();
 }
 
 function closeModal() {
+  const modal = document.getElementById('modal');
+  modal.style.transform = '';
+  modal.style.transition = '';
   document.getElementById('modalOverlay').classList.remove('open');
   document.body.style.overflow = '';
   document.getElementById('gallerySlides').innerHTML = '';
@@ -976,21 +1004,70 @@ document.getElementById('modalOverlay').addEventListener('click', e => { if (e.t
 document.getElementById('galleryPrev').addEventListener('click', () => goSlide(currentSlide - 1));
 document.getElementById('galleryNext').addEventListener('click', () => goSlide(currentSlide + 1));
 
-/* tela cheia ao clicar na imagem da galeria */
+/* tela cheia ao clicar na imagem (apenas fotos, não vídeos) */
 document.getElementById('gallerySlides').addEventListener('click', e => {
   const slide = e.target.closest('.gallery-slide');
   if (!slide || slide.tagName === 'IFRAME' || slide.tagName === 'VIDEO') return;
   const gal = document.getElementById('gallery');
-  if (!document.fullscreenElement) {
-    (gal.requestFullscreen || gal.webkitRequestFullscreen || gal.mozRequestFullScreen).call(gal);
-  } else {
-    (document.exitFullscreen || document.webkitExitFullscreen || document.mozCancelFullScreen).call(document);
+  const fn  = gal.requestFullscreen || gal.webkitRequestFullscreen || gal.mozRequestFullScreen;
+  if (fn && !document.fullscreenElement) fn.call(gal);
+  else if (document.fullscreenElement) {
+    const exit = document.exitFullscreen || document.webkitExitFullscreen || document.mozCancelFullScreen;
+    if (exit) exit.call(document);
   }
 });
 document.addEventListener('fullscreenchange', () => {
   const gal = document.getElementById('gallery');
   if (gal) gal.style.cursor = document.fullscreenElement ? 'zoom-out' : 'zoom-in';
 });
+
+/* mostra bloqueio da barra do Google Drive */
+function updateDriveBlock() {
+  const isDrive = slides[currentSlide] && slides[currentSlide].src && slides[currentSlide].src.includes('drive.google.com');
+  document.getElementById('driveBlock').style.display = isDrive ? '' : 'none';
+}
+
+/* swipe horizontal na galeria + swipe down para fechar modal */
+(function() {
+  let tx = 0, ty = 0, dragging = false;
+  const modal   = document.getElementById('modal');
+  const slides_ = document.getElementById('gallerySlides');
+
+  /* swipe na galeria */
+  slides_.addEventListener('touchstart', e => { tx = e.touches[0].clientX; }, { passive: true });
+  slides_.addEventListener('touchend',   e => {
+    const dx = e.changedTouches[0].clientX - tx;
+    if (Math.abs(dx) > 50) dx < 0 ? goSlide(currentSlide + 1) : goSlide(currentSlide - 1);
+  }, { passive: true });
+
+  /* swipe down para fechar */
+  let startY = 0, startModal = 0;
+  modal.addEventListener('touchstart', e => {
+    startY     = e.touches[0].clientY;
+    startModal = modal.getBoundingClientRect().top;
+    dragging   = false;
+  }, { passive: true });
+
+  modal.addEventListener('touchmove', e => {
+    const dy = e.touches[0].clientY - startY;
+    if (dy > 10) {
+      dragging = true;
+      modal.style.transform = `translateY(${Math.max(0, dy)}px)`;
+      modal.style.transition = 'none';
+    }
+  }, { passive: true });
+
+  modal.addEventListener('touchend', e => {
+    const dy = e.changedTouches[0].clientY - startY;
+    modal.style.transition = '';
+    if (dy > 100) {
+      closeModal();
+    } else {
+      modal.style.transform = '';
+    }
+    dragging = false;
+  }, { passive: true });
+})();
 document.addEventListener('keydown', e => {
   if (!document.getElementById('modalOverlay').classList.contains('open')) return;
   if (e.key === 'Escape')      closeModal();
