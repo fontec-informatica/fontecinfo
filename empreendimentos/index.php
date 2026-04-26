@@ -443,10 +443,40 @@ if (file_exists($jsonFile)) {
       width: 42px; height: 42px; border-radius: 50%;
       display: flex; align-items: center; justify-content: center;
       transition: background var(--trans); z-index: 6;
+      touch-action: manipulation; /* evita zoom duplo toque */
+      -webkit-tap-highlight-color: transparent;
+      user-select: none;
     }
     .gallery-nav:hover { background: var(--accent); }
     .gallery-nav.prev { left: 12px; }
     .gallery-nav.next { right: 12px; }
+    .gallery-slides { touch-action: pan-x; } /* scroll horizontal sem zoom */
+
+    /* ── LIGHTBOX MOBILE (fullscreen customizado para iOS) ── */
+    .lightbox {
+      display: none; position: fixed; inset: 0; z-index: 9999;
+      background: #000;
+      align-items: center; justify-content: center;
+      flex-direction: column;
+    }
+    .lightbox.open { display: flex; }
+    .lightbox-img {
+      max-width: 100%; max-height: 100vh;
+      object-fit: contain; display: block;
+    }
+    .lightbox-close {
+      position: absolute; top: 16px; right: 16px;
+      width: 40px; height: 40px; border-radius: 50%;
+      background: rgba(255,255,255,.15); color: #fff;
+      border: none; cursor: pointer; font-size: 1.1rem;
+      display: flex; align-items: center; justify-content: center;
+      touch-action: manipulation;
+    }
+    .lightbox-hint {
+      position: absolute; bottom: 24px;
+      font-size: .75rem; color: rgba(255,255,255,.4);
+      pointer-events: none;
+    }
     .gallery-dots {
       position: absolute; bottom: 14px; left: 50%; transform: translateX(-50%);
       display: flex; gap: 6px; z-index: 6;
@@ -713,6 +743,13 @@ if (file_exists($jsonFile)) {
       </div>
     </div>
   </div>
+</div>
+
+<!-- LIGHTBOX MOBILE -->
+<div class="lightbox" id="lightbox">
+  <img class="lightbox-img" id="lightboxImg" src="" alt="" />
+  <button class="lightbox-close" id="lightboxClose" aria-label="Fechar"><i class="fa fa-times"></i></button>
+  <span class="lightbox-hint">Deslize para baixo para fechar</span>
 </div>
 
 <script>
@@ -1005,21 +1042,71 @@ document.getElementById('galleryPrev').addEventListener('click', () => goSlide(c
 document.getElementById('galleryNext').addEventListener('click', () => goSlide(currentSlide + 1));
 
 /* tela cheia ao clicar na imagem (apenas fotos, não vídeos) */
+const isMobile = () => 'ontouchstart' in window || window.innerWidth <= 900;
+
 document.getElementById('gallerySlides').addEventListener('click', e => {
   const slide = e.target.closest('.gallery-slide');
   if (!slide || slide.tagName === 'IFRAME' || slide.tagName === 'VIDEO') return;
-  const gal = document.getElementById('gallery');
-  const fn  = gal.requestFullscreen || gal.webkitRequestFullscreen || gal.mozRequestFullScreen;
-  if (fn && !document.fullscreenElement) fn.call(gal);
-  else if (document.fullscreenElement) {
-    const exit = document.exitFullscreen || document.webkitExitFullscreen || document.mozCancelFullScreen;
-    if (exit) exit.call(document);
+  const src = slide.src || slide.querySelector('img')?.src || (slide.tagName === 'IMG' ? slide.src : null);
+  if (!src) return;
+
+  if (isMobile()) {
+    openLightbox(src);
+  } else {
+    const gal = document.getElementById('gallery');
+    const fn  = gal.requestFullscreen || gal.webkitRequestFullscreen || gal.mozRequestFullScreen;
+    if (fn && !document.fullscreenElement) fn.call(gal);
+    else if (document.fullscreenElement) {
+      const exit = document.exitFullscreen || document.webkitExitFullscreen || document.mozCancelFullScreen;
+      if (exit) exit.call(document);
+    }
   }
 });
 document.addEventListener('fullscreenchange', () => {
   const gal = document.getElementById('gallery');
   if (gal) gal.style.cursor = document.fullscreenElement ? 'zoom-out' : 'zoom-in';
 });
+
+/* ── LIGHTBOX MOBILE ── */
+const lightbox      = document.getElementById('lightbox');
+const lightboxImg   = document.getElementById('lightboxImg');
+const lightboxClose = document.getElementById('lightboxClose');
+
+function openLightbox(src) {
+  lightboxImg.src = src;
+  lightbox.classList.add('open');
+  document.body.style.overflow = 'hidden';
+}
+function closeLightbox() {
+  lightbox.classList.remove('open');
+  lightboxImg.src = '';
+  document.body.style.overflow = '';
+}
+lightboxClose.addEventListener('click', closeLightbox);
+lightbox.addEventListener('click', e => { if (e.target === lightbox) closeLightbox(); });
+
+/* swipe down para fechar lightbox */
+(function() {
+  let ly = 0;
+  lightbox.addEventListener('touchstart', e => { ly = e.touches[0].clientY; }, { passive: true });
+  lightbox.addEventListener('touchmove', e => {
+    const dy = e.touches[0].clientY - ly;
+    if (dy > 0) {
+      lightboxImg.style.transform = `translateY(${dy}px)`;
+      lightboxImg.style.transition = 'none';
+    }
+  }, { passive: true });
+  lightbox.addEventListener('touchend', e => {
+    const dy = e.changedTouches[0].clientY - ly;
+    lightboxImg.style.transition = '';
+    if (dy > 80) {
+      lightboxImg.style.transform = '';
+      closeLightbox();
+    } else {
+      lightboxImg.style.transform = '';
+    }
+  }, { passive: true });
+})();
 
 /* mostra bloqueio da barra do Google Drive */
 function updateDriveBlock() {
