@@ -622,6 +622,10 @@ if (file_exists($jsonFile)) {
   <div class="footer-grid">
     <div class="footer-brand">
       <img src="../assets/img/logo.png?v=2" alt="Fontec Empreendimentos" />
+      <div style="margin-bottom:10px;">
+        <span style="font-size:.8rem;color:var(--muted);letter-spacing:.04em;">Empreendimentos</span><br>
+        <span style="display:inline-block;font-size:.62rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;background:var(--accent);color:#fff;padding:2px 8px;border-radius:20px;margin-top:4px;">Imóveis Rurais</span>
+      </div>
       <p>Fontec Empreendimentos — imóveis rurais selecionados em Goiás e região. Propriedades verificadas, documentação em ordem.</p>
     </div>
     <div class="footer-col">
