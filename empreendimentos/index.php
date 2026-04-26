@@ -500,6 +500,31 @@ if (file_exists($jsonFile)) {
     }
 
     /* ── WHATSAPP FLOAT ── */
+    /* ── SCROLL TO TOP ── */
+    .scroll-top {
+      position: fixed; bottom: 90px; right: 28px;
+      width: 44px; height: 44px;
+      background: var(--accent); color: #fff;
+      border: none; border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      cursor: pointer; z-index: 150;
+      opacity: 0; transform: translateY(16px);
+      transition: opacity .3s ease, transform .3s ease, background var(--trans);
+      box-shadow: 0 4px 14px rgba(26,107,66,.35);
+    }
+    .scroll-top.visible { opacity: 1; transform: translateY(0); }
+    .scroll-top:hover { background: var(--accent2); transform: translateY(-3px); }
+    .scroll-top i { font-size: 16px; animation: arrowBounce 1.4s ease-in-out infinite; }
+    @keyframes arrowBounce {
+      0%, 100% { transform: translateY(0); }
+      40%       { transform: translateY(-6px); }
+      60%       { transform: translateY(2px); }
+    }
+
+    /* ── LOGO NÃO ARRASTÁVEL ── */
+    .logo img, .footer-brand img { -webkit-user-drag: none; user-drag: none; pointer-events: none; }
+    .logo, .footer-brand > div { pointer-events: auto; }
+
     .whatsapp-float {
       position: fixed; bottom: 24px; right: 24px;
       width: 58px; height: 58px; background: #25d366;
@@ -561,13 +586,13 @@ if (file_exists($jsonFile)) {
 
 <!-- HEADER -->
 <header>
-  <div class="logo">
+  <a href="index.php" class="logo" aria-label="Fontec Empreendimentos - Início">
     <img src="../assets/img/logo.png?v=2" alt="Fontec Empreendimentos" />
     <div class="logo-text">
       <span class="logo-sub">Empreendimentos</span>
       <span class="logo-badge">Imóveis Rurais</span>
     </div>
-  </div>
+  </a>
   <div class="header-right">
     <button class="theme-toggle" id="themeToggle" aria-label="Alternar tema">
       <svg class="icon-sun" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="5"/><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/></svg>
@@ -656,6 +681,11 @@ if (file_exists($jsonFile)) {
     <span>Desenvolvido pela FONTEC</span>
   </div>
 </footer>
+
+<!-- SCROLL TO TOP -->
+<button class="scroll-top" id="scrollTop" aria-label="Voltar ao topo">
+  <i class="fa fa-arrow-up"></i>
+</button>
 
 <!-- WHATSAPP FLOAT -->
 <a href="https://wa.me/message/AVL74KZZJTWMO1" class="whatsapp-float" target="_blank" rel="noopener" aria-label="WhatsApp">
@@ -996,6 +1026,13 @@ document.addEventListener('keydown', e => {
   if (e.key === 'ArrowLeft')   goSlide(currentSlide - 1);
   if (e.key === 'ArrowRight')  goSlide(currentSlide + 1);
 });
+
+/* ── SCROLL TO TOP ── */
+const scrollTopBtn = document.getElementById('scrollTop');
+window.addEventListener('scroll', () => {
+  scrollTopBtn.classList.toggle('visible', window.scrollY > 400);
+}, { passive: true });
+scrollTopBtn.addEventListener('click', () => window.scrollTo({ top: 0, behavior: 'smooth' }));
 
 /* ── ANTI-CÓPIA ── */
 document.addEventListener('contextmenu', e => e.preventDefault());
