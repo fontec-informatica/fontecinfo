@@ -1,11 +1,21 @@
 <?php
-$jsonFile = __DIR__ . '/data/fazendas.json';
-$fazendas = [];
+$jsonFile  = __DIR__ . '/data/fazendas.json';
+$uploadDir = __DIR__ . '/uploads/';
+$fazendas  = [];
 if (file_exists($jsonFile)) {
     $raw = file_get_contents($jsonFile);
     $all = json_decode($raw, true) ?: [];
     foreach ($all as $f) {
-        if (!empty($f['publicado'])) $fazendas[] = $f;
+        if (empty($f['publicado'])) continue;
+        /* resolve thumb por foto — thumb pequeno para cards, original para modal */
+        $thumbs = [];
+        foreach ($f['fotos'] ?? [] as $foto) {
+            $thumbs[] = file_exists($uploadDir . 'thumb_' . $foto)
+                ? 'thumb_' . $foto
+                : $foto;
+        }
+        $f['thumbs'] = $thumbs;
+        $fazendas[] = $f;
     }
 }
 ?>
@@ -267,9 +277,10 @@ if (file_exists($jsonFile)) {
       font-size: 1.25rem; font-weight: 800;
       color: var(--accent); margin-bottom: 16px;
     }
+    .card-btns { display: flex; gap: 8px; }
     .card-btn {
-      display: flex; align-items: center; justify-content: center; gap: 8px;
-      width: 100%; padding: 11px;
+      display: flex; align-items: center; justify-content: center; gap: 7px;
+      flex: 1; padding: 11px;
       background: var(--accent); color: #fff;
       border-radius: var(--radius-sm);
       font-size: .88rem; font-weight: 600;
@@ -277,6 +288,46 @@ if (file_exists($jsonFile)) {
       border: none; cursor: pointer;
     }
     .card-btn:hover { background: var(--accent2); transform: translateY(-1px); }
+    .card-btn-video {
+      display: flex; align-items: center; justify-content: center; gap: 6px;
+      padding: 11px 14px;
+      background: #dc2626; color: #fff;
+      border-radius: var(--radius-sm);
+      font-size: .88rem; font-weight: 700;
+      border: none; cursor: pointer;
+      transition: background var(--trans), transform var(--trans);
+      white-space: nowrap;
+    }
+    .card-btn-video:hover { background: #b91c1c; transform: translateY(-1px); }
+    .card-video-badge {
+      position: absolute; bottom: 10px; left: 12px;
+      background: rgba(220,38,38,.92);
+      color: #fff; font-size: .72rem; font-weight: 700;
+      padding: 4px 10px; border-radius: 10px;
+      display: flex; align-items: center; gap: 5px;
+      z-index: 2; backdrop-filter: blur(4px);
+    }
+    /* dot de vídeo na galeria */
+    .gallery-dot.is-video {
+      background: rgba(220,38,38,.55);
+      width: 28px; border-radius: 5px;
+      font-size: .55rem; line-height: 8px;
+      display: flex; align-items: center; justify-content: center;
+      color: rgba(255,255,255,.8);
+    }
+    .gallery-dot.is-video.active { background: #dc2626; color: #fff; }
+    /* botão ir ao vídeo no modal */
+    .btn-goto-video {
+      display: flex; align-items: center; justify-content: center; gap: 8px;
+      padding: 14px 20px;
+      background: #dc2626; color: #fff;
+      border-radius: var(--radius-sm);
+      font-weight: 700; font-size: .95rem;
+      border: none; cursor: pointer;
+      transition: background var(--trans), transform var(--trans);
+      white-space: nowrap;
+    }
+    .btn-goto-video:hover { background: #b91c1c; transform: translateY(-2px); }
 
     /* ── EMPTY STATE ── */
     .empty-state {
@@ -597,9 +648,12 @@ if (file_exists($jsonFile)) {
       <div class="modal-specs" id="modalSpecs"></div>
       <div class="modal-desc" id="modalDesc"></div>
       <div class="modal-actions">
+        <button id="btnGotoVideo" class="btn-goto-video" style="display:none" onclick="goToVideo()">
+          <i class="fa fa-play-circle"></i> Assistir vídeo
+        </button>
         <a id="modalWA" href="#" class="btn-whatsapp" target="_blank" rel="noopener">
           <i class="fa-brands fa-whatsapp" style="font-size:1.2rem"></i>
-          Tenho interesse nesta propriedade
+          Tenho interesse
         </a>
       </div>
     </div>
@@ -676,19 +730,31 @@ function renderCards(list) {
   }
 
   grid.innerHTML = list.map((f, i) => {
-    const thumb = f.fotos && f.fotos.length
-      ? `<img src="uploads/${f.fotos[0]}" alt="${f.nome}" loading="lazy" />`
+    /* usa thumbnail (pequeno/rápido) no card, original fica para o modal */
+    const thumbSrc = f.thumbs && f.thumbs.length ? f.thumbs[0] : (f.fotos && f.fotos.length ? f.fotos[0] : null);
+    const priority = i < 4 ? 'fetchpriority="high"' : 'loading="lazy" decoding="async"';
+    const thumbEl  = thumbSrc
+      ? `<img src="uploads/${thumbSrc}" alt="${f.nome}" ${priority} />`
       : `<div class="card-thumb-placeholder"><i class="fa fa-image"></i></div>`;
-    const mediaCount = (f.fotos ? f.fotos.length : 0) + (f.video ? 1 : 0);
-    const countBadge = mediaCount > 1 ? `<span class="card-count"><i class="fa fa-images"></i> ${mediaCount}</span>` : '';
+
+    const fotoCount = f.fotos ? f.fotos.length : 0;
+    const hasVideo  = !!f.video;
+    const countBadge = fotoCount > 1 ? `<span class="card-count"><i class="fa fa-images"></i> ${fotoCount}${hasVideo?' + vídeo':''}</span>` : '';
+    const videoBadge = hasVideo ? `<span class="card-video-badge"><i class="fa fa-play-circle"></i> Vídeo disponível</span>` : '';
+
     const alqInfo = f.alqueires ? `<span class="card-spec"><i class="fa fa-ruler-combined"></i> ${f.alqueires} alq</span>` : '';
     const haInfo  = f.hectares  ? `<span class="card-spec"><i class="fa fa-expand-arrows-alt"></i> ${f.hectares} ha</span>` : '';
 
+    const videoBtnCard = hasVideo
+      ? `<button class="card-btn-video" onclick="openModal(${i},true)" title="Assistir vídeo"><i class="fa fa-play-circle"></i></button>`
+      : '';
+
     return `<article class="card" data-idx="${i}" data-tipo="${(f.tipo||'').toLowerCase()}">
       <div class="card-thumb" id="cthumb_${i}">
-        ${thumb}
+        ${thumbEl}
         <div class="wm-overlay" id="cwm_${i}"></div>
         <span class="card-badge">${f.tipo || 'Imóvel'}</span>
+        ${videoBadge}
         ${countBadge}
       </div>
       <div class="card-body">
@@ -699,9 +765,12 @@ function renderCards(list) {
           ${f.agua ? `<span class="card-spec"><i class="fa fa-water"></i> ${f.agua}</span>` : ''}
         </div>
         <div class="card-price">${fmtPrice(f.preco)}</div>
-        <button class="card-btn" onclick="openModal(${i})">
-          <i class="fa fa-expand"></i> Ver detalhes
-        </button>
+        <div class="card-btns">
+          <button class="card-btn" onclick="openModal(${i})">
+            <i class="fa fa-expand"></i> Ver detalhes
+          </button>
+          ${videoBtnCard}
+        </div>
       </div>
     </article>`;
   }).join('');
@@ -766,7 +835,14 @@ function resolveVideoEmbed(url) {
   return { type: 'file' };
 }
 
-function openModal(idx) {
+let videoSlideIndex = -1;
+
+function goToVideo() {
+  if (videoSlideIndex >= 0) goSlide(videoSlideIndex);
+  document.getElementById('gallery').scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+
+function openModal(idx, goVideo = false) {
   const f = fazendas[idx];
   if (!f) return;
 
@@ -793,14 +869,20 @@ function openModal(idx) {
   const waMsg = encodeURIComponent(`Olá! Tenho interesse na propriedade: ${f.nome} – ${f.cidade||''}/${f.estado||''}. Poderia me passar mais informações?`);
   document.getElementById('modalWA').href = `https://wa.me/5562994712382?text=${waMsg}`;
 
-  /* slides */
+  /* slides — fotos originais (alta qualidade) + vídeo */
   slides = [];
+  videoSlideIndex = -1;
   (f.fotos || []).forEach(foto => slides.push({ type: 'img', src: 'uploads/' + foto }));
   if (f.video) {
     const embedSrc = resolveVideoEmbed(f.video);
+    videoSlideIndex = slides.length;
     if (embedSrc.type === 'iframe') slides.push({ type: 'yt',    src: embedSrc.src });
-    else if (embedSrc.type === 'file') slides.push({ type: 'video', src: 'uploads/' + f.video });
+    else                            slides.push({ type: 'video', src: 'uploads/' + f.video });
   }
+
+  /* botão "Assistir vídeo" no modal */
+  const btnVideo = document.getElementById('btnGotoVideo');
+  btnVideo.style.display = videoSlideIndex >= 0 ? '' : 'none';
 
   const slidesEl = document.getElementById('gallerySlides');
   const dotsEl   = document.getElementById('galleryDots');
@@ -819,9 +901,12 @@ function openModal(idx) {
       if (s.type === 'yt')    return `<iframe class="gallery-slide video-slide" src="${s.src}" frameborder="0" allowfullscreen></iframe>`;
       if (s.type === 'video') return `<video class="gallery-slide" src="${s.src}" controls></video>`;
     }).join('');
-    dotsEl.innerHTML = slides.map((_, i) =>
-      `<span class="gallery-dot${i===0?' active':''}" data-dot="${i}"></span>`
-    ).join('');
+    dotsEl.innerHTML = slides.map((s, i) => {
+      const isVid = (s.type === 'yt' || s.type === 'video');
+      const cls   = ['gallery-dot', i===0?'active':'', isVid?'is-video':''].filter(Boolean).join(' ');
+      const lbl   = isVid ? '▶' : '';
+      return `<span class="${cls}" data-dot="${i}" title="${isVid?'Vídeo':'Foto '+(i+1)}">${lbl}</span>`;
+    }).join('');
     dotsEl.querySelectorAll('.gallery-dot').forEach(d =>
       d.addEventListener('click', () => goSlide(parseInt(d.dataset.dot)))
     );
@@ -833,10 +918,12 @@ function openModal(idx) {
     buildWatermark(wmEl, gal.offsetWidth, gal.offsetHeight);
   }
 
-  currentSlide = 0;
-  goSlide(0);
   document.getElementById('modalOverlay').classList.add('open');
   document.body.style.overflow = 'hidden';
+  /* se clicou em "ver vídeo", vai direto ao slide de vídeo */
+  const startSlide = (goVideo && videoSlideIndex >= 0) ? videoSlideIndex : 0;
+  currentSlide = 0;
+  goSlide(startSlide);
 }
 
 function goSlide(n) {
