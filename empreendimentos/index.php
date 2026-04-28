@@ -404,6 +404,22 @@ if (file_exists($jsonFile)) {
     }
     .gallery-slide.video-slide { min-width: 100%; height: 100%; border: none; flex-shrink: 0; cursor: default; }
 
+    /* wrapper YouTube — bloqueia título e logo clicáveis */
+    .yt-wrapper {
+      position: relative; min-width: 100%; height: 100%; flex-shrink: 0;
+    }
+    .yt-wrapper::before {
+      content: ''; position: absolute;
+      top: 0; left: 0; right: 0; height: 70px;
+      z-index: 2; background: transparent;
+    }
+    .yt-wrapper::after {
+      content: ''; position: absolute;
+      bottom: 0; right: 0; width: 180px; height: 44px;
+      z-index: 2; background: transparent;
+    }
+    .yt-wrapper .video-slide { min-width: 100%; height: 100%; }
+
     /* MARCA D'ÁGUA NA GALERIA */
     .gallery-wm {
       position: absolute; inset: 0;
@@ -891,7 +907,7 @@ function resolveVideoEmbed(url) {
   if (url.includes('youtube.com') || url.includes('youtu.be')) {
     let src = url;
     const match = url.match(/(?:v=|youtu\.be\/)([a-zA-Z0-9_-]{11})/);
-    src = match ? `https://www.youtube.com/embed/${match[1]}?rel=0&modestbranding=1&fs=0&vq=hd2160&hd=1` : url;
+    src = match ? `https://www.youtube.com/embed/${match[1]}?rel=0&modestbranding=1&fs=0&showinfo=0&vq=hd2160&hd=1` : url;
     return { type: 'iframe', src };
   }
 
@@ -978,7 +994,7 @@ function openModal(idx, goVideo = false) {
   } else {
     slidesEl.innerHTML = slides.map(s => {
       if (s.type === 'img')   return `<img class="gallery-slide" src="${s.src}" alt="" />`;
-      if (s.type === 'yt')    return `<iframe class="gallery-slide video-slide" src="${s.src}" frameborder="0"></iframe>`;
+      if (s.type === 'yt')    return `<div class="yt-wrapper"><iframe class="gallery-slide video-slide" src="${s.src}" frameborder="0"></iframe></div>`;
       if (s.type === 'video') return `<video class="gallery-slide" src="${s.src}" controls></video>`;
     }).join('');
     dotsEl.innerHTML = slides.map((s, i) => {
