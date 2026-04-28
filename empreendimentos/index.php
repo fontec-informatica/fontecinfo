@@ -891,7 +891,7 @@ function resolveVideoEmbed(url) {
   if (url.includes('youtube.com') || url.includes('youtu.be')) {
     let src = url;
     const match = url.match(/(?:v=|youtu\.be\/)([a-zA-Z0-9_-]{11})/);
-    src = match ? `https://www.youtube.com/embed/${match[1]}?rel=0&modestbranding=1` : url;
+    src = match ? `https://www.youtube.com/embed/${match[1]}?rel=0&modestbranding=1&fs=0&vq=hd2160&hd=1` : url;
     return { type: 'iframe', src };
   }
 
@@ -978,7 +978,7 @@ function openModal(idx, goVideo = false) {
   } else {
     slidesEl.innerHTML = slides.map(s => {
       if (s.type === 'img')   return `<img class="gallery-slide" src="${s.src}" alt="" />`;
-      if (s.type === 'yt')    return `<iframe class="gallery-slide video-slide" src="${s.src}" frameborder="0" allowfullscreen></iframe>`;
+      if (s.type === 'yt')    return `<iframe class="gallery-slide video-slide" src="${s.src}" frameborder="0"></iframe>`;
       if (s.type === 'video') return `<video class="gallery-slide" src="${s.src}" controls></video>`;
     }).join('');
     dotsEl.innerHTML = slides.map((s, i) => {
