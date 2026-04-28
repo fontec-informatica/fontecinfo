@@ -1,12 +1,10 @@
-# Bloqueia acesso direto às pastas de dados e uploads
+# Bloqueia acesso direto apenas à pasta data/ (JSON sensível)
 <IfModule mod_rewrite.c>
   RewriteEngine On
-
-  RewriteRule ^data/.*$    - [F,L]
-  RewriteRule ^uploads/.*$ - [F,L]
+  RewriteRule ^data/.*$ - [F,L]
 </IfModule>
 
-# Fallback via FilesMatch para servidores sem mod_rewrite
+# Bloqueia acesso direto a arquivos JSON
 <FilesMatch "\.json$">
   Order allow,deny
   Deny from all
