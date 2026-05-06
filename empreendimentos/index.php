@@ -1115,6 +1115,8 @@ scrollTopBtn.addEventListener('click', () => window.scrollTo({ top: 0, behavior:
 
 let ytPlayer = null;
 let ytProgInterval = null;
+let ytFirstPlay = true;
+let ytFadeTimer = null;
 
 function onYouTubeIframeAPIReady() {
   if (document.getElementById('ytPlayerFrame')) createYTPlayer();
@@ -1122,15 +1124,24 @@ function onYouTubeIframeAPIReady() {
 
 function createYTPlayer() {
   if (ytPlayer) { try { ytPlayer.destroy(); } catch(e) {} ytPlayer = null; }
+  ytFirstPlay = true;
+  clearTimeout(ytFadeTimer);
   ytPlayer = new YT.Player('ytPlayerFrame', {
     events: {
       onReady: e => { e.target.playVideo(); },
       onStateChange: e => {
         const overlay = document.getElementById('ytOverlay');
         if (e.data === YT.PlayerState.PLAYING) {
-          if (overlay) overlay.classList.add('playing');
+          /* no primeiro play aguarda 3s para o overlay do YouTube sumir */
+          const delay = ytFirstPlay ? 3000 : 500;
+          ytFirstPlay = false;
+          clearTimeout(ytFadeTimer);
+          ytFadeTimer = setTimeout(() => {
+            if (overlay) overlay.classList.add('playing');
+          }, delay);
           startYTProgress();
         } else {
+          clearTimeout(ytFadeTimer);
           if (overlay) overlay.classList.remove('playing');
           stopYTProgress();
         }
@@ -1157,6 +1168,8 @@ function stopYTProgress() {
 }
 
 function destroyYTPlayer() {
+  clearTimeout(ytFadeTimer);
+  ytFirstPlay = true;
   stopYTProgress();
   if (ytPlayer) { try { ytPlayer.destroy(); } catch(e) {} ytPlayer = null; }
 }
