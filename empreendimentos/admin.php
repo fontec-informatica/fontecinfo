@@ -896,9 +896,6 @@ $okMsg   = match($ok) {
     <?php if (can('ver_imoveis') || can('cadastrar_imoveis')): ?>
     <a href="admin.php?section=imoveis" class="snav-btn <?= $section==='imoveis'?'active':'' ?>"><i class="fa fa-home"></i> Imóveis</a>
     <?php endif; ?>
-    <?php if (can('gerenciar_imagens')): ?>
-    <a href="admin.php?section=imagens" class="snav-btn <?= $section==='imagens'?'active':'' ?>"><i class="fa fa-images"></i> Imagens</a>
-    <?php endif; ?>
     <?php if ($isAdmin || can('gerenciar_filiados')): ?>
     <a href="admin.php?section=filiados" class="snav-btn <?= $section==='filiados'?'active':'' ?>"><i class="fa fa-users"></i> Filiados</a>
     <?php endif; ?>
