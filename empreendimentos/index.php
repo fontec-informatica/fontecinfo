@@ -864,6 +864,7 @@ function renderCards(list) {
       </div>
       <div class="card-body">
         <div class="card-title">${f.nome}</div>
+        ${f.codigo ? `<div style="font-size:.72rem;font-weight:700;color:var(--accent);letter-spacing:.06em;margin-bottom:4px">Cód. ${f.codigo}</div>` : ''}
         <div class="card-location"><i class="fa fa-map-pin"></i> ${f.cidade||''}${f.estado?', '+f.estado:''}</div>
         <div class="card-specs">
           ${alqInfo}${haInfo}
