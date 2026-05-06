@@ -953,7 +953,7 @@ function openModal(idx, goVideo = false) {
   if (!f) return;
 
   document.getElementById('modalTitle').textContent    = f.nome || '';
-  document.getElementById('modalLocation').innerHTML   = `<i class="fa fa-map-pin"></i> ${f.cidade||''}${f.estado?', '+f.estado:''}`;
+  document.getElementById('modalLocation').innerHTML   = `${f.codigo?`<span style="font-size:.75rem;font-weight:700;color:var(--accent);letter-spacing:.05em;margin-right:10px">Cód. ${f.codigo}</span>`:''}<i class="fa fa-map-pin"></i> ${f.cidade||''}${f.estado?', '+f.estado:''}`;
   document.getElementById('modalPrice').textContent    = fmtPrice(f.preco);
 
   const specs = [

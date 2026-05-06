@@ -5,8 +5,19 @@ session_start();
 define('ADMIN_PASS',  'Fontec@2026');
 define('JSON_FILE',   __DIR__ . '/data/fazendas.json');
 define('UPLOAD_DIR',  __DIR__ . '/uploads/');
-define('ALLOWED_IMG', ['image/jpeg','image/png','image/webp','image/gif']);
-define('ALLOWED_VID', ['video/mp4','video/webm','video/ogg']);
+define('ALLOWED_IMG',   ['image/jpeg','image/png','image/webp','image/gif']);
+define('ALLOWED_VID',   ['video/mp4','video/webm','video/ogg']);
+define('FILIADOS_FILE', __DIR__ . '/data/filiados.json');
+define('PERMS_LIST', [
+    'ver_imoveis'        => 'Visualizar imóveis',
+    'cadastrar_imoveis'  => 'Cadastrar imóveis',
+    'editar_imoveis'     => 'Editar imóveis',
+    'excluir_imoveis'    => 'Excluir imóveis',
+    'publicar_imoveis'   => 'Publicar / Ocultar imóveis',
+    'gerenciar_imagens'  => 'Gerenciar imagens do servidor',
+    'ver_filiados'       => 'Visualizar filiados',
+    'gerenciar_filiados' => 'Cadastrar e editar filiados',
+]);
 
 /* ── HELPERS ── */
 function loadFazendas(): array {
@@ -82,6 +93,28 @@ function newId(): string {
     return uniqid('f_', true);
 }
 
+function loadFiliados(): array {
+    if (!file_exists(FILIADOS_FILE)) return [];
+    return json_decode(file_get_contents(FILIADOS_FILE), true) ?: [];
+}
+
+function saveFiliados(array $data): void {
+    file_put_contents(FILIADOS_FILE, json_encode(array_values($data), JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_PRETTY_PRINT));
+}
+
+function gerarCodigo(array $rows): string {
+    $max = 202600;
+    foreach ($rows as $r) {
+        if (!empty($r['codigo']) && (int)$r['codigo'] > $max) $max = (int)$r['codigo'];
+    }
+    return (string)($max + 1);
+}
+
+function can(string $perm): bool {
+    if (!empty($_SESSION['admin'])) return true;
+    return in_array($perm, $_SESSION['filiado']['perms'] ?? []);
+}
+
 /* ── AUTH ── */
 $loginError = '';
 if (isset($_POST['logout'])) {
@@ -96,13 +129,28 @@ if (isset($_POST['password'])) {
         $loginError = 'Senha incorreta. Tente novamente.';
     }
 }
+if (isset($_POST['filiado_login'])) {
+    $loginError = 'E-mail ou senha incorretos.';
+    foreach (loadFiliados() as $f) {
+        if ($f['email'] === trim($_POST['filiado_email'] ?? '')
+            && !empty($f['ativo'])
+            && password_verify($_POST['filiado_senha'] ?? '', $f['senha'] ?? '')) {
+            $_SESSION['filiado'] = ['id' => $f['id'], 'nome' => $f['nome'], 'perms' => $f['perms'] ?? []];
+            $loginError = '';
+            break;
+        }
+    }
+}
+$isAdmin   = !empty($_SESSION['admin']);
+$isFiliado = !empty($_SESSION['filiado']);
+$isAuth    = $isAdmin || $isFiliado;
 
 /* ── AÇÕES (requer auth) ── */
 $msg = '';
-if (!empty($_SESSION['admin'])) {
+if ($isAuth) {
 
     /* PUBLICAR / OCULTAR */
-    if (isset($_GET['toggle'])) {
+    if (isset($_GET['toggle']) && can('publicar_imoveis')) {
         $id = $_GET['toggle'];
         $rows = loadFazendas();
         foreach ($rows as &$r) {
@@ -113,8 +161,8 @@ if (!empty($_SESSION['admin'])) {
         exit;
     }
 
-    /* EXCLUIR */
-    if (isset($_GET['del'])) {
+    /* EXCLUIR IMÓVEL */
+    if (isset($_GET['del']) && can('excluir_imoveis')) {
         $id = $_GET['del'];
         $rows = loadFazendas();
         foreach ($rows as $r) {
@@ -129,14 +177,76 @@ if (!empty($_SESSION['admin'])) {
         exit;
     }
 
-    /* SALVAR (criar / editar) */
+    /* EXCLUIR IMAGEM DO SERVIDOR */
+    if (isset($_GET['delimg']) && can('gerenciar_imagens')) {
+        deleteFile(basename($_GET['delimg']));
+        header('Location: admin.php?ok=delimg&section=imagens');
+        exit;
+    }
+
+    /* EXCLUIR IMAGENS EM LOTE */
+    if (isset($_POST['action']) && $_POST['action'] === 'del_imgs' && can('gerenciar_imagens')) {
+        foreach ($_POST['imgs'] ?? [] as $img) deleteFile(basename($img));
+        header('Location: admin.php?ok=delimg&section=imagens');
+        exit;
+    }
+
+    /* SALVAR FILIADO */
+    if (isset($_POST['action']) && $_POST['action'] === 'save_filiado' && $isAdmin) {
+        $filiados = loadFiliados();
+        $fid      = $_POST['filiado_id'] ?? '';
+        $isNewF   = empty($fid);
+        $filiado  = [
+            'id'        => $isNewF ? newId() : $fid,
+            'nome'      => sanitize($_POST['filiado_nome']     ?? ''),
+            'cpf'       => sanitize($_POST['filiado_cpf']      ?? ''),
+            'email'     => sanitize($_POST['filiado_email']    ?? ''),
+            'telefone'  => sanitize($_POST['filiado_telefone'] ?? ''),
+            'perms'     => array_values(array_filter($_POST['filiado_perms'] ?? [], fn($p) => array_key_exists($p, PERMS_LIST))),
+            'ativo'     => isset($_POST['filiado_ativo']) ? 1 : 0,
+            'criado_em' => '',
+            'senha'     => '',
+        ];
+        $senha = $_POST['filiado_senha'] ?? '';
+        if ($isNewF) {
+            $filiado['senha']     = password_hash($senha ?: 'trocar123', PASSWORD_DEFAULT);
+            $filiado['criado_em'] = date('Y-m-d H:i:s');
+        } else {
+            foreach ($filiados as $f) {
+                if ($f['id'] === $fid) {
+                    $filiado['senha']     = $senha ? password_hash($senha, PASSWORD_DEFAULT) : ($f['senha'] ?? '');
+                    $filiado['criado_em'] = $f['criado_em'] ?? '';
+                    break;
+                }
+            }
+        }
+        if ($isNewF) $filiados[] = $filiado;
+        else foreach ($filiados as &$f) { if ($f['id'] === $fid) { $f = $filiado; break; } }
+        saveFiliados($filiados);
+        header('Location: admin.php?ok=filiado&section=filiados');
+        exit;
+    }
+
+    /* EXCLUIR FILIADO */
+    if (isset($_GET['del_filiado']) && $isAdmin) {
+        $filiados = array_filter(loadFiliados(), fn($f) => $f['id'] !== $_GET['del_filiado']);
+        saveFiliados($filiados);
+        header('Location: admin.php?ok=del_filiado&section=filiados');
+        exit;
+    }
+
+    /* SALVAR IMÓVEL */
     if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['action'] === 'save') {
-        $rows = loadFazendas();
-        $id   = $_POST['id'] ?? '';
+        $rows  = loadFazendas();
+        $id    = $_POST['id'] ?? '';
         $isNew = empty($id);
+
+        if (!$isNew && !can('editar_imoveis')) { header('Location: admin.php'); exit; }
+        if ($isNew  && !can('cadastrar_imoveis')) { header('Location: admin.php'); exit; }
 
         $fazenda = [
             'id'          => $isNew ? newId() : $id,
+            'codigo'      => '',
             'nome'        => sanitize($_POST['nome']        ?? ''),
             'cidade'      => sanitize($_POST['cidade']      ?? ''),
             'estado'      => sanitize($_POST['estado']      ?? ''),
@@ -157,16 +267,17 @@ if (!empty($_SESSION['admin'])) {
         ];
 
         if (!$isNew) {
-            /* mantém dados existentes */
             foreach ($rows as $r) {
                 if ($r['id'] === $id) {
                     $fazenda['fotos']      = $r['fotos']      ?? [];
                     $fazenda['video_file'] = $r['video_file'] ?? '';
                     $fazenda['criado_em']  = $r['criado_em']  ?? '';
+                    $fazenda['codigo']     = $r['codigo']     ?? gerarCodigo($rows);
                     break;
                 }
             }
         } else {
+            $fazenda['codigo']    = gerarCodigo($rows);
             $fazenda['criado_em'] = date('Y-m-d H:i:s');
         }
 
@@ -221,18 +332,27 @@ if (!empty($_SESSION['admin'])) {
     }
 }
 
-$rows    = !empty($_SESSION['admin']) ? loadFazendas() : [];
+$rows    = $isAuth && can('ver_imoveis') ? loadFazendas() : [];
 $editRow = null;
-if (!empty($_GET['edit']) && !empty($_SESSION['admin'])) {
+if (!empty($_GET['edit']) && $isAuth && can('editar_imoveis')) {
     $eid = $_GET['edit'];
     foreach ($rows as $r) { if ($r['id'] === $eid) { $editRow = $r; break; } }
 }
-$ok = $_GET['ok'] ?? '';
-$okMsg = match($ok) {
-    'save'   => 'Propriedade salva com sucesso!',
-    'del'    => 'Propriedade excluída.',
-    'toggle' => 'Visibilidade atualizada.',
-    default  => '',
+$filiados    = $isAdmin ? loadFiliados() : [];
+$editFiliado = null;
+if (!empty($_GET['edit_filiado']) && $isAdmin) {
+    foreach ($filiados as $f) { if ($f['id'] === $_GET['edit_filiado']) { $editFiliado = $f; break; } }
+}
+$section = $_GET['section'] ?? 'imoveis';
+$ok      = $_GET['ok'] ?? '';
+$okMsg   = match($ok) {
+    'save'        => 'Propriedade salva com sucesso!',
+    'del'         => 'Propriedade excluída.',
+    'toggle'      => 'Visibilidade atualizada.',
+    'delimg'      => 'Imagem(ns) excluída(s) com sucesso.',
+    'filiado'     => 'Filiado salvo com sucesso!',
+    'del_filiado' => 'Filiado excluído.',
+    default       => '',
 };
 ?>
 <!DOCTYPE html>
@@ -550,6 +670,59 @@ $okMsg = match($ok) {
     }
     .progress-label { font-size: .8rem; color: var(--muted); }
 
+    /* LOGIN TABS */
+    .login-tabs { display: flex; gap: 8px; margin-bottom: 20px; }
+    .ltab {
+      flex: 1; padding: 9px; border-radius: var(--radius-sm);
+      border: 1.5px solid var(--border); background: var(--bg);
+      color: var(--muted); font-size: .85rem; font-weight: 600;
+      cursor: pointer; transition: all var(--trans);
+    }
+    .ltab.active { background: var(--accent); color: #fff; border-color: var(--accent); }
+
+    /* SECTION TABS */
+    .section-nav { display: flex; gap: 8px; margin-bottom: 28px; flex-wrap: wrap; }
+    .snav-btn {
+      padding: 8px 20px; border-radius: 20px;
+      border: 1.5px solid var(--border); background: var(--surface);
+      color: var(--muted); font-size: .85rem; font-weight: 600;
+      cursor: pointer; text-decoration: none; transition: all var(--trans);
+      display: inline-flex; align-items: center; gap: 7px;
+    }
+    .snav-btn:hover, .snav-btn.active { background: var(--accent); color: #fff; border-color: var(--accent); }
+
+    /* PERMISSÕES */
+    .perms-grid {
+      display: grid; grid-template-columns: repeat(auto-fill, minmax(220px,1fr));
+      gap: 10px; margin-top: 8px;
+    }
+    .perm-item {
+      display: flex; align-items: center; gap: 8px;
+      padding: 8px 12px; border-radius: var(--radius-sm);
+      border: 1.5px solid var(--border); background: var(--bg);
+      cursor: pointer; transition: all .2s; font-size: .85rem;
+    }
+    .perm-item:has(input:checked) { border-color: var(--accent); background: rgba(26,107,66,.08); color: var(--accent); }
+    .perm-item input { accent-color: var(--accent); width: 16px; height: 16px; cursor: pointer; }
+
+    /* IMAGENS GRID */
+    .imgs-grid { display: flex; flex-wrap: wrap; gap: 14px; margin-top: 16px; }
+    .img-card {
+      display: flex; flex-direction: column; align-items: center; gap: 6px;
+    }
+    .img-card-thumb {
+      width: 110px; height: 80px; border-radius: var(--radius-sm);
+      overflow: hidden; border: 1.5px solid var(--border); position: relative;
+    }
+    .img-card-thumb img { width: 100%; height: 100%; object-fit: cover; }
+    .img-card-thumb.sel { border-color: var(--accent); }
+    .img-card input[type=checkbox] { accent-color: var(--accent); width: 15px; height: 15px; }
+    .img-card-name { font-size: .65rem; color: var(--muted); max-width: 110px; word-break: break-all; text-align: center; }
+
+    /* FILIADOS BADGE */
+    .badge-ativo   { background: rgba(26,107,66,.12);  color: var(--accent); padding: 3px 10px; border-radius: 12px; font-size: .73rem; font-weight: 700; }
+    .badge-inativo { background: rgba(107,114,128,.12); color: var(--muted);  padding: 3px 10px; border-radius: 12px; font-size: .73rem; font-weight: 700; }
+
     @media (max-width: 768px) {
       .admin-header { padding: 0 4%; height: 64px; }
       .admin-brand img { height: 100px; }
@@ -572,39 +745,57 @@ $okMsg = match($ok) {
 </head>
 <body>
 
-<?php if (empty($_SESSION['admin'])): ?>
+<?php if (!$isAuth): ?>
 <!-- ════════════════ LOGIN ════════════════ -->
 <div class="login-wrap">
   <div class="login-card">
     <img src="../assets/img/logo.png?v=2" alt="FONTEC" />
     <h2>Painel Administrativo</h2>
     <p>Fontec Empreendimentos — acesso restrito</p>
+    <div class="login-tabs">
+      <button class="ltab active" onclick="switchTab('admin',this)"><i class="fa fa-shield-halved"></i> Administrador</button>
+      <button class="ltab"        onclick="switchTab('filiado',this)"><i class="fa fa-user"></i> Filiado</button>
+    </div>
     <?php if ($loginError): ?>
       <div class="login-error"><i class="fa fa-exclamation-triangle"></i> <?= $loginError ?></div>
     <?php endif; ?>
-    <form method="POST">
-      <div class="field">
-        <label for="pw">Senha de acesso</label>
-        <input type="password" id="pw" name="password" placeholder="••••••••••••" autofocus required />
-      </div>
-      <button class="btn-primary" type="submit"><i class="fa fa-lock"></i> Entrar</button>
-    </form>
+    <div id="tab-admin">
+      <form method="POST">
+        <div class="field">
+          <label for="pw">Senha de acesso</label>
+          <input type="password" id="pw" name="password" placeholder="••••••••••••" autofocus />
+        </div>
+        <button class="btn-primary" type="submit"><i class="fa fa-lock"></i> Entrar</button>
+      </form>
+    </div>
+    <div id="tab-filiado" style="display:none">
+      <form method="POST">
+        <input type="hidden" name="filiado_login" value="1" />
+        <div class="field">
+          <label>E-mail</label>
+          <input type="email" name="filiado_email" placeholder="seu@email.com" />
+        </div>
+        <div class="field">
+          <label>Senha</label>
+          <input type="password" name="filiado_senha" placeholder="••••••••••••" />
+        </div>
+        <button class="btn-primary" type="submit"><i class="fa fa-user"></i> Entrar como Filiado</button>
+      </form>
+    </div>
   </div>
 </div>
 
 <?php else: ?>
 <!-- ════════════════ PAINEL ════════════════ -->
 <header class="admin-header">
-  <a href="admin.php" class="admin-brand" title="Nova propriedade">
+  <a href="admin.php" class="admin-brand">
     <img src="../assets/img/logo.png?v=2" alt="Fontec Empreendimentos" />
     <div class="admin-brand-text">
       <span class="admin-brand-name">Empreendimentos</span>
-      <span class="admin-brand-badge">Painel Admin</span>
+      <span class="admin-brand-badge"><?= $isAdmin ? 'Painel Admin' : 'Filiado: '.htmlspecialchars($_SESSION['filiado']['nome'] ?? '') ?></span>
     </div>
   </a>
   <div class="header-right">
-    <a href="admin.php" class="btn-sm"><i class="fa fa-plus"></i> <span>Nova propriedade</span></a>
-    <a href="#sec-propriedades" class="btn-sm"><i class="fa fa-list"></i> <span>Propriedades</span></a>
     <a href="index.php" class="btn-sm" target="_blank"><i class="fa fa-eye"></i> <span>Ver site</span></a>
     <form method="POST" style="display:inline">
       <button name="logout" class="btn-sm btn-danger"><i class="fa fa-sign-out-alt"></i> <span>Sair</span></button>
@@ -617,7 +808,23 @@ $okMsg = match($ok) {
     <div class="alert"><i class="fa fa-check-circle"></i> <?= $okMsg ?></div>
   <?php endif; ?>
 
+  <!-- NAVEGAÇÃO DE SEÇÕES -->
+  <nav class="section-nav">
+    <?php if (can('ver_imoveis') || can('cadastrar_imoveis')): ?>
+    <a href="admin.php?section=imoveis" class="snav-btn <?= $section==='imoveis'?'active':'' ?>"><i class="fa fa-home"></i> Imóveis</a>
+    <?php endif; ?>
+    <?php if (can('gerenciar_imagens')): ?>
+    <a href="admin.php?section=imagens" class="snav-btn <?= $section==='imagens'?'active':'' ?>"><i class="fa fa-images"></i> Imagens</a>
+    <?php endif; ?>
+    <?php if ($isAdmin || can('ver_filiados') || can('gerenciar_filiados')): ?>
+    <a href="admin.php?section=filiados" class="snav-btn <?= $section==='filiados'?'active':'' ?>"><i class="fa fa-users"></i> Filiados</a>
+    <?php endif; ?>
+  </nav>
+
+<?php if ($section === 'imoveis' && (can('ver_imoveis') || can('cadastrar_imoveis'))): ?>
+
   <!-- FORMULÁRIO CRIAR / EDITAR -->
+  <?php if (can('cadastrar_imoveis') || ($editRow && can('editar_imoveis'))): ?>
   <div class="form-card" id="form-section">
     <h2><?= $editRow ? '<i class="fa fa-edit"></i> Editar Propriedade' : '<i class="fa fa-plus-circle"></i> Nova Propriedade' ?></h2>
 
@@ -626,6 +833,12 @@ $okMsg = match($ok) {
       <input type="hidden" name="id" value="<?= htmlspecialchars($editRow['id'] ?? '') ?>" />
 
       <div class="form-grid">
+        <?php if ($editRow && !empty($editRow['codigo'])): ?>
+        <div class="field">
+          <label>Código</label>
+          <input type="text" value="<?= htmlspecialchars($editRow['codigo']) ?>" readonly style="background:var(--bg2);color:var(--muted);cursor:default" />
+        </div>
+        <?php endif; ?>
         <div class="field">
           <label>Nome / Identificação *</label>
           <input type="text" name="nome" required value="<?= htmlspecialchars($editRow['nome'] ?? '') ?>" placeholder="Ex: Fazenda Santa Helena" />
@@ -802,56 +1015,46 @@ $okMsg = match($ok) {
       </div>
     </form>
   </div>
+  <?php endif; /* can create/edit form */ ?>
 
   <!-- OVERLAY PROGRESSO -->
   <div class="upload-overlay" id="uploadOverlay">
     <div class="upload-box">
       <h3><i class="fa fa-cloud-upload-alt"></i> Enviando dados…</h3>
       <p id="progressLabel">Preparando o envio</p>
-      <div class="progress-track">
-        <div class="progress-fill" id="progressFill"></div>
-      </div>
+      <div class="progress-track"><div class="progress-fill" id="progressFill"></div></div>
       <div class="progress-pct" id="progressPct">0%</div>
       <div class="progress-label" id="progressSub">Aguarde, não feche esta janela</div>
     </div>
   </div>
 
-  <!-- TABELA -->
+  <!-- TABELA IMÓVEIS -->
+  <?php if (can('ver_imoveis')): ?>
   <div class="admin-top" id="sec-propriedades">
     <h1>Propriedades cadastradas <small style="font-size:.8rem;font-weight:400;color:var(--muted)">(<?= count($rows) ?>)</small></h1>
-    <a href="#form-section" class="btn-sm"><i class="fa fa-arrow-up"></i> Nova propriedade</a>
+    <?php if (can('cadastrar_imoveis')): ?>
+    <a href="admin.php?section=imoveis#form-section" class="btn-sm"><i class="fa fa-plus"></i> Nova propriedade</a>
+    <?php endif; ?>
   </div>
-
   <div class="table-wrap">
     <table>
       <thead>
         <tr>
-          <th>Nome</th>
-          <th>Cidade/Estado</th>
-          <th>Tipo</th>
-          <th>Hectares</th>
-          <th>Preço</th>
-          <th>Fotos</th>
-          <th>Status</th>
-          <th>Ações</th>
+          <th>Código</th><th>Nome</th><th>Cidade/Estado</th><th>Tipo</th>
+          <th>Preço</th><th>Fotos</th><th>Status</th><th>Ações</th>
         </tr>
       </thead>
       <tbody>
         <?php if (empty($rows)): ?>
-          <tr class="empty-row"><td colspan="8">Nenhuma propriedade cadastrada. Use o formulário acima para criar.</td></tr>
+          <tr class="empty-row"><td colspan="8">Nenhuma propriedade cadastrada.</td></tr>
         <?php else: ?>
           <?php foreach ($rows as $r): ?>
           <tr>
+            <td><code style="font-size:.82rem;color:var(--accent);font-weight:700"><?= htmlspecialchars($r['codigo'] ?? '—') ?></code></td>
             <td><strong><?= htmlspecialchars($r['nome'] ?? '-') ?></strong></td>
             <td><?= htmlspecialchars(($r['cidade'] ?? '-') . '/' . ($r['estado'] ?? '')) ?></td>
             <td><?= htmlspecialchars($r['tipo'] ?? '-') ?></td>
-            <td><?= htmlspecialchars($r['hectares'] ?? '-') ?></td>
-            <td>
-              <?php
-              $p = $r['preco'] ?? '';
-              echo $p ? 'R$ ' . number_format((float)$p, 0, ',', '.') : 'Consultar';
-              ?>
-            </td>
+            <td><?php $p=$r['preco']??''; echo $p?'R$ '.number_format((float)$p,0,',','.') :'Consultar'; ?></td>
             <td><?= count($r['fotos'] ?? []) ?></td>
             <td>
               <?php if (!empty($r['publicado'])): ?>
@@ -862,10 +1065,16 @@ $okMsg = match($ok) {
             </td>
             <td>
               <div class="td-actions">
-                <a href="admin.php?edit=<?= urlencode($r['id']) ?>#form-section" class="btn-icon" title="Editar"><i class="fa fa-edit"></i></a>
+                <?php if (can('editar_imoveis')): ?>
+                <a href="admin.php?section=imoveis&edit=<?= urlencode($r['id']) ?>#form-section" class="btn-icon" title="Editar"><i class="fa fa-edit"></i></a>
+                <?php endif; ?>
+                <?php if (can('publicar_imoveis')): ?>
                 <a href="admin.php?toggle=<?= urlencode($r['id']) ?>" class="btn-icon toggle" title="Alternar visibilidade"><i class="fa fa-eye"></i></a>
+                <?php endif; ?>
+                <?php if (can('excluir_imoveis')): ?>
                 <a href="admin.php?del=<?= urlencode($r['id']) ?>" class="btn-icon del" title="Excluir"
-                   onclick="return confirm('Excluir esta propriedade? Esta ação não pode ser desfeita.')"><i class="fa fa-trash"></i></a>
+                   onclick="return confirm('Excluir esta propriedade? Não pode ser desfeito.')"><i class="fa fa-trash"></i></a>
+                <?php endif; ?>
               </div>
             </td>
           </tr>
@@ -874,6 +1083,162 @@ $okMsg = match($ok) {
       </tbody>
     </table>
   </div>
+  <?php endif; /* ver_imoveis */ ?>
+
+<?php elseif ($section === 'imagens' && can('gerenciar_imagens')): ?>
+
+  <!-- ════ GERENCIADOR DE IMAGENS ════ -->
+  <div class="admin-top">
+    <h1><i class="fa fa-images"></i> Imagens no servidor</h1>
+  </div>
+  <?php
+  $allImgs = array_filter(glob(UPLOAD_DIR . '*') ?: [], function($p) {
+      $n = basename($p);
+      return !str_starts_with($n, 'thumb_') && in_array(strtolower(pathinfo($n, PATHINFO_EXTENSION)), ['jpg','jpeg','png','webp','gif']);
+  });
+  ?>
+  <?php if (empty($allImgs)): ?>
+    <div class="form-card"><p style="color:var(--muted);text-align:center;padding:20px">Nenhuma imagem encontrada.</p></div>
+  <?php else: ?>
+  <div class="form-card">
+    <form method="POST" id="formDelImgs">
+      <input type="hidden" name="action" value="del_imgs" />
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;flex-wrap:wrap;gap:10px">
+        <span style="font-size:.88rem;color:var(--muted)"><?= count($allImgs) ?> imagem(ns) encontrada(s)</span>
+        <div style="display:flex;gap:8px">
+          <button type="button" class="btn-sm" onclick="toggleSelAll()"><i class="fa fa-check-square"></i> Sel. todas</button>
+          <button type="submit" class="btn-sm btn-danger" onclick="return confirm('Excluir imagens selecionadas?')"><i class="fa fa-trash"></i> Excluir selecionadas</button>
+        </div>
+      </div>
+      <div class="imgs-grid">
+        <?php foreach ($allImgs as $imgPath):
+          $imgName  = basename($imgPath);
+          $thumbSrc = file_exists(UPLOAD_DIR.'thumb_'.$imgName) ? 'uploads/thumb_'.$imgName : 'uploads/'.$imgName;
+        ?>
+        <div class="img-card">
+          <label>
+            <div class="img-card-thumb" id="icard_<?= md5($imgName) ?>">
+              <img src="<?= htmlspecialchars($thumbSrc) ?>" alt="" loading="lazy" />
+            </div>
+            <input type="checkbox" name="imgs[]" value="<?= htmlspecialchars($imgName) ?>"
+                   onchange="document.getElementById('icard_<?= md5($imgName) ?>').classList.toggle('sel',this.checked)" />
+          </label>
+          <span class="img-card-name"><?= htmlspecialchars($imgName) ?></span>
+          <a href="admin.php?delimg=<?= urlencode($imgName) ?>&section=imagens" class="foto-del-btn"
+             onclick="return confirm('Excluir esta imagem?')"><i class="fa fa-trash"></i> Excluir</a>
+        </div>
+        <?php endforeach; ?>
+      </div>
+    </form>
+  </div>
+  <?php endif; ?>
+
+<?php elseif ($section === 'filiados' && ($isAdmin || can('ver_filiados') || can('gerenciar_filiados'))): ?>
+
+  <!-- ════ FILIADOS ════ -->
+  <?php if ($isAdmin): ?>
+  <div class="form-card">
+    <h2><?= $editFiliado ? '<i class="fa fa-user-edit"></i> Editar Filiado' : '<i class="fa fa-user-plus"></i> Novo Filiado' ?></h2>
+    <form method="POST">
+      <input type="hidden" name="action" value="save_filiado" />
+      <input type="hidden" name="filiado_id" value="<?= htmlspecialchars($editFiliado['id'] ?? '') ?>" />
+      <div class="form-grid">
+        <div class="field">
+          <label>Nome completo *</label>
+          <input type="text" name="filiado_nome" required value="<?= htmlspecialchars($editFiliado['nome'] ?? '') ?>" placeholder="Ex: João da Silva" />
+        </div>
+        <div class="field">
+          <label>CPF</label>
+          <input type="text" name="filiado_cpf" value="<?= htmlspecialchars($editFiliado['cpf'] ?? '') ?>" placeholder="000.000.000-00" />
+        </div>
+        <div class="field">
+          <label>E-mail *</label>
+          <input type="email" name="filiado_email" required value="<?= htmlspecialchars($editFiliado['email'] ?? '') ?>" placeholder="email@exemplo.com" />
+        </div>
+        <div class="field">
+          <label>Telefone</label>
+          <input type="text" name="filiado_telefone" value="<?= htmlspecialchars($editFiliado['telefone'] ?? '') ?>" placeholder="(62) 99999-9999" />
+        </div>
+        <div class="field">
+          <label>Senha <?= $editFiliado ? '<small style="color:var(--muted)">(deixe em branco para manter)</small>' : '*' ?></label>
+          <input type="password" name="filiado_senha" placeholder="••••••••" <?= $editFiliado ? '' : 'required' ?> />
+        </div>
+        <div class="field">
+          <label>Status</label>
+          <div class="toggle-wrap">
+            <input type="checkbox" name="filiado_ativo" id="chkFiliado" <?= !empty($editFiliado['ativo']) || !$editFiliado ? 'checked' : '' ?> />
+            <span>Filiado ativo</span>
+          </div>
+        </div>
+        <div class="field field-full">
+          <label>Permissões</label>
+          <div class="perms-grid">
+            <?php foreach (PERMS_LIST as $key => $label): ?>
+            <label class="perm-item">
+              <input type="checkbox" name="filiado_perms[]" value="<?= $key ?>"
+                     <?= in_array($key, $editFiliado['perms'] ?? []) ? 'checked' : '' ?> />
+              <?= htmlspecialchars($label) ?>
+            </label>
+            <?php endforeach; ?>
+          </div>
+        </div>
+      </div>
+      <div class="form-actions">
+        <button class="btn-primary" type="submit" style="width:auto;padding:12px 32px">
+          <i class="fa fa-save"></i> <?= $editFiliado ? 'Salvar alterações' : 'Cadastrar filiado' ?>
+        </button>
+        <?php if ($editFiliado): ?>
+        <a href="admin.php?section=filiados" class="btn-cancel"><i class="fa fa-times"></i> Cancelar</a>
+        <?php endif; ?>
+      </div>
+    </form>
+  </div>
+  <?php endif; ?>
+
+  <div class="admin-top">
+    <h1>Filiados cadastrados <small style="font-size:.8rem;font-weight:400;color:var(--muted)">(<?= count($filiados) ?>)</small></h1>
+  </div>
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr><th>Nome</th><th>E-mail</th><th>Telefone</th><th>Permissões</th><th>Status</th><?php if($isAdmin):?><th>Ações</th><?php endif;?></tr>
+      </thead>
+      <tbody>
+        <?php if (empty($filiados)): ?>
+          <tr class="empty-row"><td colspan="6">Nenhum filiado cadastrado.</td></tr>
+        <?php else: ?>
+          <?php foreach ($filiados as $f): ?>
+          <tr>
+            <td><strong><?= htmlspecialchars($f['nome'] ?? '-') ?></strong><br><small style="color:var(--muted)"><?= htmlspecialchars($f['cpf'] ?? '') ?></small></td>
+            <td><?= htmlspecialchars($f['email'] ?? '-') ?></td>
+            <td><?= htmlspecialchars($f['telefone'] ?? '-') ?></td>
+            <td style="font-size:.78rem;color:var(--muted);max-width:220px">
+              <?= implode(', ', array_map(fn($p) => PERMS_LIST[$p] ?? $p, $f['perms'] ?? [])) ?: '—' ?>
+            </td>
+            <td>
+              <?php if (!empty($f['ativo'])): ?>
+                <span class="badge-ativo"><i class="fa fa-circle"></i> Ativo</span>
+              <?php else: ?>
+                <span class="badge-inativo"><i class="fa fa-circle"></i> Inativo</span>
+              <?php endif; ?>
+            </td>
+            <?php if ($isAdmin): ?>
+            <td>
+              <div class="td-actions">
+                <a href="admin.php?section=filiados&edit_filiado=<?= urlencode($f['id']) ?>" class="btn-icon" title="Editar"><i class="fa fa-edit"></i></a>
+                <a href="admin.php?del_filiado=<?= urlencode($f['id']) ?>" class="btn-icon del" title="Excluir"
+                   onclick="return confirm('Excluir este filiado?')"><i class="fa fa-trash"></i></a>
+              </div>
+            </td>
+            <?php endif; ?>
+          </tr>
+          <?php endforeach; ?>
+        <?php endif; ?>
+      </tbody>
+    </table>
+  </div>
+
+<?php endif; /* section */ ?>
 </main>
 
 <?php endif; ?>
@@ -882,6 +1247,24 @@ $okMsg = match($ok) {
   /* tema */
   const saved = localStorage.getItem('emp-theme') || 'light';
   document.documentElement.setAttribute('data-theme', saved);
+
+  /* ── ABAS LOGIN ── */
+  function switchTab(tab, btn) {
+    document.getElementById('tab-admin').style.display   = tab === 'admin'   ? '' : 'none';
+    document.getElementById('tab-filiado').style.display = tab === 'filiado' ? '' : 'none';
+    document.querySelectorAll('.ltab').forEach(b => b.classList.remove('active'));
+    if (btn) btn.classList.add('active');
+  }
+
+  /* ── SELECIONAR TODAS AS IMAGENS ── */
+  function toggleSelAll() {
+    const cbs = document.querySelectorAll('#formDelImgs input[type=checkbox]');
+    const allChecked = [...cbs].every(c => c.checked);
+    cbs.forEach(c => {
+      c.checked = !allChecked;
+      c.dispatchEvent(new Event('change'));
+    });
+  }
 
   /* ── UPLOAD COM PROGRESSO ── */
   function submitForm() {
