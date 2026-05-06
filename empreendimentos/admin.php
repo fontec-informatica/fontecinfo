@@ -431,7 +431,7 @@ $okMsg   = match($ok) {
 
     /* LOGIN */
     .login-wrap {
-      min-height: 100vh;
+      min-height: calc(100vh - 80px);
       display: flex; align-items: center; justify-content: center;
       background: linear-gradient(160deg, var(--bg) 0%, var(--bg2) 100%);
     }
@@ -444,8 +444,6 @@ $okMsg   = match($ok) {
       box-shadow: 0 20px 60px rgba(26,107,66,.12);
       text-align: center;
     }
-    .login-card img { height: 60px; margin: 0 auto 20px; mix-blend-mode: multiply; }
-    [data-theme="dark"] .login-card img { mix-blend-mode: normal; filter: brightness(0) invert(1); }
     .login-card h2 {
       font-family: 'Syne', sans-serif; font-size: 1.4rem; font-weight: 800;
       margin-bottom: 6px;
@@ -751,9 +749,17 @@ $okMsg   = match($ok) {
 
 <?php if (!$isAuth): ?>
 <!-- ════════════════ LOGIN ════════════════ -->
+<header class="admin-header">
+  <div class="admin-brand">
+    <img src="../assets/img/logo.png?v=2" alt="Fontec Empreendimentos" />
+    <div class="admin-brand-text">
+      <span class="admin-brand-name">Empreendimentos</span>
+      <span class="admin-brand-badge">Imóveis Rurais</span>
+    </div>
+  </div>
+</header>
 <div class="login-wrap">
   <div class="login-card">
-    <img src="../assets/img/logo.png?v=2" alt="FONTEC" />
     <h2>Painel Administrativo</h2>
     <p>Fontec Empreendimentos — acesso restrito</p>
     <div class="login-tabs">
