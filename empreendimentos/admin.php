@@ -749,9 +749,9 @@ $okMsg   = match($ok) {
 
 <?php if (!$isAuth): ?>
 <!-- ════════════════ LOGIN ════════════════ -->
-<header class="admin-header">
+<header class="admin-header" style="overflow:hidden">
   <div class="admin-brand">
-    <img src="../assets/img/logo.png?v=2" alt="Fontec Empreendimentos" />
+    <img src="../assets/img/logo.png?v=2" alt="Fontec Empreendimentos" style="height:54px" />
     <div class="admin-brand-text">
       <span class="admin-brand-name">Empreendimentos</span>
       <span class="admin-brand-badge">Imóveis Rurais</span>
