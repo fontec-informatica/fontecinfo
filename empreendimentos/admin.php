@@ -174,6 +174,14 @@ if (!empty($_SESSION['admin'])) {
         $newFotos = uploadFiles('fotos', ALLOWED_IMG, 'foto');
         $fazenda['fotos'] = array_merge($fazenda['fotos'], $newFotos);
 
+        /* fotos já existentes no servidor selecionadas pelo usuário */
+        foreach ($_POST['exist_fotos'] ?? [] as $ef) {
+            $ef = basename($ef);
+            if ($ef && file_exists(UPLOAD_DIR . $ef) && !in_array($ef, $fazenda['fotos'])) {
+                $fazenda['fotos'][] = $ef;
+            }
+        }
+
         /* upload vídeo */
         $newVid = uploadFiles('video_file', ALLOWED_VID, 'vid');
         if (!empty($newVid)) {
@@ -702,6 +710,41 @@ $okMsg = match($ok) {
                 <input type="checkbox" name="del_fotos[]" id="cb_<?= md5($foto) ?>" value="<?= htmlspecialchars($foto) ?>" />
                 <input type="hidden" name="foto_order[]" value="<?= htmlspecialchars($foto) ?>" />
               </div>
+            <?php endforeach; ?>
+          </div>
+        </div>
+        <?php endif; ?>
+
+        <!-- FOTOS DISPONÍVEIS NO SERVIDOR -->
+        <?php
+        $allFiles    = glob(UPLOAD_DIR . '*') ?: [];
+        $currentFotos = $editRow['fotos'] ?? [];
+        $availPhotos = array_filter($allFiles, function($path) use ($currentFotos) {
+            $name = basename($path);
+            $ext  = strtolower(pathinfo($name, PATHINFO_EXTENSION));
+            return !str_starts_with($name, 'thumb_')
+                && in_array($ext, ['jpg','jpeg','png','webp','gif'])
+                && !in_array($name, $currentFotos);
+        });
+        if (!empty($availPhotos)): ?>
+        <div class="field field-full">
+          <label>Imagens já no servidor <small style="color:var(--muted)"> — marque para vincular a esta propriedade</small></label>
+          <div style="display:flex;flex-wrap:wrap;gap:12px;margin-top:10px">
+            <?php foreach ($availPhotos as $path):
+              $name     = basename($path);
+              $thumbSrc = file_exists(UPLOAD_DIR . 'thumb_' . $name) ? 'uploads/thumb_' . $name : 'uploads/' . $name;
+              $uid      = md5($name);
+            ?>
+            <label for="exist_<?= $uid ?>" style="display:flex;flex-direction:column;align-items:center;gap:5px;cursor:pointer">
+              <div id="existframe_<?= $uid ?>" style="position:relative;width:90px;height:70px;border-radius:8px;overflow:hidden;border:1.5px solid var(--border);transition:border-color .2s">
+                <img src="<?= htmlspecialchars($thumbSrc) ?>" alt="" style="width:100%;height:100%;object-fit:cover" loading="lazy" />
+              </div>
+              <div style="display:flex;align-items:center;gap:5px">
+                <input type="checkbox" id="exist_<?= $uid ?>" name="exist_fotos[]" value="<?= htmlspecialchars($name) ?>"
+                       onchange="document.getElementById('existframe_<?= $uid ?>').style.borderColor=this.checked?'var(--accent)':'var(--border)'" />
+                <span style="font-size:.72rem;color:var(--muted)">Vincular</span>
+              </div>
+            </label>
             <?php endforeach; ?>
           </div>
         </div>
