@@ -404,6 +404,21 @@ if (file_exists($jsonFile)) {
     }
     .gallery-slide.video-slide { min-width: 100%; height: 100%; border: none; flex-shrink: 0; cursor: default; }
 
+    /* wrapper vídeo local com barra de progresso */
+    .video-player-wrap {
+      min-width: 100%; height: 100%; flex-shrink: 0;
+      display: flex; flex-direction: column; background: #000;
+    }
+    .video-player-wrap video {
+      flex: 1; width: 100%; object-fit: contain; min-height: 0;
+    }
+    .video-prog-bar {
+      width: 100%; height: 3px; background: rgba(255,255,255,.15); flex-shrink: 0;
+    }
+    .video-prog-fill {
+      height: 100%; width: 0%; background: #22c55e; transition: width .1s linear;
+    }
+
     /* wrapper YouTube — bloqueia título e logo clicáveis */
     .yt-wrapper {
       position: relative; min-width: 100%; height: 100%; flex-shrink: 0;
@@ -995,8 +1010,15 @@ function openModal(idx, goVideo = false) {
     slidesEl.innerHTML = slides.map(s => {
       if (s.type === 'img')   return `<img class="gallery-slide" src="${s.src}" alt="" />`;
       if (s.type === 'yt')    return `<div class="yt-wrapper"><iframe class="gallery-slide video-slide" src="${s.src}" frameborder="0"></iframe></div>`;
-      if (s.type === 'video') return `<video class="gallery-slide" src="${s.src}" controls></video>`;
+      if (s.type === 'video') return `<div class="video-player-wrap"><video class="gallery-slide" src="${s.src}" autoplay muted playsinline loop></video><div class="video-prog-bar"><div class="video-prog-fill"></div></div></div>`;
     }).join('');
+    const vidEl = slidesEl.querySelector('video');
+    if (vidEl) {
+      vidEl.addEventListener('timeupdate', () => {
+        const fill = slidesEl.querySelector('.video-prog-fill');
+        if (fill && vidEl.duration) fill.style.width = (vidEl.currentTime / vidEl.duration * 100) + '%';
+      });
+    }
     dotsEl.innerHTML = slides.map((s, i) => {
       const isVid = (s.type === 'yt' || s.type === 'video');
       const cls   = ['gallery-dot', i===0?'active':'', isVid?'is-video':''].filter(Boolean).join(' ');
@@ -1026,10 +1048,17 @@ function goSlide(n) {
   currentSlide = (n + slides.length) % slides.length;
   document.getElementById('gallerySlides').style.transform = `translateX(-${currentSlide * 100}%)`;
   document.querySelectorAll('.gallery-dot').forEach((d, i) => d.classList.toggle('active', i === currentSlide));
+  const vid = document.querySelector('#gallerySlides video');
+  if (vid) {
+    if (slides[currentSlide]?.type === 'video') vid.play().catch(() => {});
+    else vid.pause();
+  }
   if (typeof updateDriveBlock === 'function') updateDriveBlock();
 }
 
 function closeModal() {
+  const vid = document.querySelector('#gallerySlides video');
+  if (vid) vid.pause();
   const modal = document.getElementById('modal');
   modal.style.transform = '';
   modal.style.transition = '';
