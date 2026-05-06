@@ -833,12 +833,17 @@ $okMsg   = match($ok) {
       <input type="hidden" name="id" value="<?= htmlspecialchars($editRow['id'] ?? '') ?>" />
 
       <div class="form-grid">
-        <?php if ($editRow && !empty($editRow['codigo'])): ?>
         <div class="field">
           <label>Código</label>
-          <input type="text" value="<?= htmlspecialchars($editRow['codigo']) ?>" readonly style="background:var(--bg2);color:var(--muted);cursor:default" />
+          <?php if ($editRow): ?>
+            <input type="text" value="<?= !empty($editRow['codigo']) ? htmlspecialchars($editRow['codigo']) : 'Será gerado ao salvar' ?>"
+                   readonly style="background:var(--bg2);color:var(--muted);cursor:default" />
+          <?php else: ?>
+            <?php $proximoCodigo = gerarCodigo(loadFazendas()); ?>
+            <input type="text" value="Gerado automaticamente — próximo: <?= $proximoCodigo ?>"
+                   readonly style="background:var(--bg2);color:var(--muted);cursor:default;font-size:.82rem" />
+          <?php endif; ?>
         </div>
-        <?php endif; ?>
         <div class="field">
           <label>Nome / Identificação *</label>
           <input type="text" name="nome" required value="<?= htmlspecialchars($editRow['nome'] ?? '') ?>" placeholder="Ex: Fazenda Santa Helena" />
