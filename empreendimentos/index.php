@@ -428,6 +428,7 @@ if (file_exists($jsonFile)) {
       position: relative; flex: 1; min-height: 0;
     }
     .yt-wrapper .video-slide { width: 100%; height: 100%; display: block; border: none; }
+    .yt-click-block { position: absolute; inset: 0; z-index: 3; }
 
     /* MARCA D'ÁGUA NA GALERIA */
     .gallery-wm {
@@ -1003,7 +1004,7 @@ function openModal(idx, goVideo = false) {
   } else {
     slidesEl.innerHTML = slides.map(s => {
       if (s.type === 'img')   return `<img class="gallery-slide" src="${s.src}" alt="" />`;
-      if (s.type === 'yt')    return `<div class="yt-player-wrap"><div class="yt-wrapper"><iframe id="ytPlayerFrame" class="gallery-slide video-slide" src="${s.src}" frameborder="0" allow="autoplay; encrypted-media"></iframe></div><div class="video-prog-bar"><div class="video-prog-fill"></div></div></div>`;
+      if (s.type === 'yt')    return `<div class="yt-player-wrap"><div class="yt-wrapper"><iframe id="ytPlayerFrame" class="gallery-slide video-slide" src="${s.src}" frameborder="0" allow="autoplay; encrypted-media"></iframe><div class="yt-click-block"></div></div><div class="video-prog-bar"><div class="video-prog-fill"></div></div></div>`;
       if (s.type === 'video') return `<div class="video-player-wrap"><video class="gallery-slide" src="${s.src}" autoplay muted playsinline loop></video><div class="video-prog-bar"><div class="video-prog-fill"></div></div></div>`;
     }).join('');
     const vidEl = slidesEl.querySelector('video');
