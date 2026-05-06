@@ -281,25 +281,70 @@ if ($isAuth) {
         if ($isNew  && !can('cadastrar_imoveis')) { header('Location: admin.php'); exit; }
 
         $fazenda = [
-            'id'          => $isNew ? newId() : $id,
-            'codigo'      => '',
-            'nome'        => sanitize($_POST['nome']        ?? ''),
-            'cidade'      => sanitize($_POST['cidade']      ?? ''),
-            'estado'      => sanitize($_POST['estado']      ?? ''),
-            'tipo'        => sanitize($_POST['tipo']        ?? ''),
-            'hectares'    => sanitize($_POST['hectares']    ?? ''),
-            'alqueires'   => sanitize($_POST['alqueires']   ?? ''),
-            'preco'       => sanitize(str_replace(['.', ','], ['', '.'], $_POST['preco'] ?? '')),
-            'agua'        => sanitize($_POST['agua']        ?? ''),
-            'solo'        => sanitize($_POST['solo']        ?? ''),
-            'benfeitorias'=> sanitize($_POST['benfeitorias']?? ''),
-            'acesso'      => sanitize($_POST['acesso']      ?? ''),
-            'descricao'   => sanitize($_POST['descricao']   ?? ''),
-            'publicado'   => isset($_POST['publicado']) ? 1 : 0,
-            'video_link'  => sanitize($_POST['video_link']  ?? ''),
-            'fotos'       => [],
-            'video_file'  => '',
-            'criado_em'   => '',
+            'id'             => $isNew ? newId() : $id,
+            'codigo'         => '',
+            'tipo'           => sanitize($_POST['tipo']            ?? ''),
+            'nome'           => sanitize($_POST['nome']            ?? ''),
+            // Localização
+            'cidade'         => sanitize($_POST['cidade']          ?? ''),
+            'estado'         => sanitize($_POST['estado']          ?? ''),
+            'bairro'         => sanitize($_POST['bairro']          ?? ''),
+            'endereco'       => sanitize($_POST['endereco']        ?? ''),
+            'numero'         => sanitize($_POST['numero']          ?? ''),
+            'complemento'    => sanitize($_POST['complemento']     ?? ''),
+            // Rural
+            'hectares'       => sanitize($_POST['hectares']        ?? ''),
+            'alqueires'      => sanitize($_POST['alqueires']       ?? ''),
+            'agua'           => sanitize($_POST['agua']            ?? ''),
+            'solo'           => sanitize($_POST['solo']            ?? ''),
+            'topografia'     => sanitize($_POST['topografia']      ?? ''),
+            'benfeitorias'   => sanitize($_POST['benfeitorias']    ?? ''),
+            'acesso'         => sanitize($_POST['acesso']          ?? ''),
+            // Dimensões urbanas
+            'area_construida'=> sanitize($_POST['area_construida'] ?? ''),
+            'area_terreno'   => sanitize($_POST['area_terreno']    ?? ''),
+            'area_privativa' => sanitize($_POST['area_privativa']  ?? ''),
+            'area_total'     => sanitize($_POST['area_total']      ?? ''),
+            'area_imovel'    => sanitize($_POST['area_imovel']     ?? ''),
+            'andar'          => sanitize($_POST['andar']           ?? ''),
+            'total_andares'  => sanitize($_POST['total_andares']   ?? ''),
+            // Lote
+            'area_lote'      => sanitize($_POST['area_lote']       ?? ''),
+            'testada'        => sanitize($_POST['testada']         ?? ''),
+            'profundidade'   => sanitize($_POST['profundidade']    ?? ''),
+            'zoneamento'     => sanitize($_POST['zoneamento']      ?? ''),
+            'situacao_lote'  => sanitize($_POST['situacao_lote']   ?? ''),
+            'infra_lote'     => array_values(array_filter($_POST['infra_lote']    ?? [])),
+            // Galpão
+            'pe_direito'     => sanitize($_POST['pe_direito']      ?? ''),
+            'docas'          => sanitize($_POST['docas']           ?? ''),
+            'energia'        => sanitize($_POST['energia']         ?? ''),
+            // Ponto
+            'tipo_ponto'     => sanitize($_POST['tipo_ponto']      ?? ''),
+            // Composição residencial
+            'quartos'        => sanitize($_POST['quartos']         ?? ''),
+            'suites'         => sanitize($_POST['suites']          ?? ''),
+            'banheiros'      => sanitize($_POST['banheiros']       ?? ''),
+            'lavabos'        => sanitize($_POST['lavabos']         ?? ''),
+            'garagem'        => sanitize($_POST['garagem']         ?? ''),
+            'tipo_garagem'   => sanitize($_POST['tipo_garagem']    ?? ''),
+            'posicao_solar'  => sanitize($_POST['posicao_solar']   ?? ''),
+            'mobiliado'      => sanitize($_POST['mobiliado']       ?? ''),
+            // Características
+            'caracteristicas'=> array_values(array_filter($_POST['caracteristicas'] ?? [])),
+            // Condomínio
+            'cond_nome'      => sanitize($_POST['cond_nome']       ?? ''),
+            'condominio'     => sanitize(str_replace(['.', ','], ['', '.'], $_POST['condominio'] ?? '')),
+            // Financeiro
+            'preco'          => sanitize(str_replace(['.', ','], ['', '.'], $_POST['preco']      ?? '')),
+            'iptu'           => sanitize(str_replace(['.', ','], ['', '.'], $_POST['iptu']       ?? '')),
+            // Descrição e mídia
+            'descricao'      => sanitize($_POST['descricao']       ?? ''),
+            'publicado'      => isset($_POST['publicado']) ? 1 : 0,
+            'video_link'     => sanitize($_POST['video_link']      ?? ''),
+            'fotos'          => [],
+            'video_file'     => '',
+            'criado_em'      => '',
         ];
 
         if (!$isNew) {
@@ -309,6 +354,9 @@ if ($isAuth) {
                     $fazenda['video_file'] = $r['video_file'] ?? '';
                     $fazenda['criado_em']  = $r['criado_em']  ?? '';
                     $fazenda['codigo']     = $r['codigo']     ?? gerarCodigo($rows);
+                    // preservar arrays se não vieram no POST
+                    if (empty($_POST['infra_lote']))     $fazenda['infra_lote']     = $r['infra_lote']     ?? [];
+                    if (empty($_POST['caracteristicas'])) $fazenda['caracteristicas'] = $r['caracteristicas'] ?? [];
                     break;
                 }
             }
@@ -786,6 +834,29 @@ $okMsg   = match($ok) {
     .badge-ativo   { background: rgba(26,107,66,.12);  color: var(--accent); padding: 3px 10px; border-radius: 12px; font-size: .73rem; font-weight: 700; }
     .badge-inativo { background: rgba(107,114,128,.12); color: var(--muted);  padding: 3px 10px; border-radius: 12px; font-size: .73rem; font-weight: 700; }
 
+    .form-section-title {
+      grid-column: 1 / -1;
+      font-family: 'Syne', sans-serif;
+      font-size: .75rem; font-weight: 700; letter-spacing: .08em;
+      text-transform: uppercase; color: var(--accent);
+      padding: 18px 0 8px; margin-top: 8px;
+      border-bottom: 2px solid rgba(26,107,66,.18);
+      display: flex; align-items: center; gap: 8px;
+    }
+    .caract-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(195px, 1fr));
+      gap: 8px; margin-top: 8px;
+    }
+    .caract-item {
+      display: flex; align-items: center; gap: 8px;
+      padding: 7px 12px; border-radius: var(--radius-sm);
+      border: 1.5px solid var(--border); background: var(--bg);
+      cursor: pointer; font-size: .84rem; transition: all .2s;
+    }
+    .caract-item:has(input:checked) { border-color: var(--accent); background: rgba(26,107,66,.08); color: var(--accent); }
+    .caract-item input { accent-color: var(--accent); cursor: pointer; flex-shrink: 0; }
+
     @media (max-width: 768px) {
       .admin-header { padding: 0 4%; height: 64px; }
       .admin-brand img { height: 188px; }
@@ -913,6 +984,25 @@ $okMsg   = match($ok) {
       <input type="hidden" name="id" value="<?= htmlspecialchars($editRow['id'] ?? '') ?>" />
 
       <div class="form-grid">
+
+        <!-- ── TIPO ── -->
+        <div class="field field-full">
+          <label>Tipo de Imóvel *</label>
+          <select name="tipo" id="inp_tipo" onchange="atualizarCampos()" required>
+            <option value="">Selecione o tipo...</option>
+            <?php
+            $tipos = ['Fazenda','Sítio','Chácara','Terra Nua','Casa','Apartamento','Lote','Sala Comercial','Ponto Comercial','Galpão','Outros'];
+            foreach ($tipos as $t):
+              $s = ($editRow['tipo'] ?? '') === $t ? ' selected' : '';
+            ?>
+            <option<?= $s ?>><?= $t ?></option>
+            <?php endforeach; ?>
+          </select>
+        </div>
+
+        <!-- ── IDENTIFICAÇÃO ── -->
+        <div class="field field-full form-section-title"><i class="fa fa-tag"></i> Identificação</div>
+
         <div class="field">
           <label>Código</label>
           <?php if ($editRow): ?>
@@ -920,71 +1010,369 @@ $okMsg   = match($ok) {
                    readonly style="background:var(--bg2);color:var(--muted);cursor:default" />
           <?php else: ?>
             <?php $proximoCodigo = gerarCodigo(loadFazendas()); ?>
-            <input type="text" value="Gerado automaticamente — próximo: <?= $proximoCodigo ?>"
+            <input type="text" value="Automático — próximo: <?= $proximoCodigo ?>"
                    readonly style="background:var(--bg2);color:var(--muted);cursor:default;font-size:.82rem" />
           <?php endif; ?>
         </div>
+
         <div class="field">
           <label>Nome / Identificação *</label>
-          <input type="text" name="nome" required value="<?= htmlspecialchars($editRow['nome'] ?? '') ?>" placeholder="Ex: Fazenda Santa Helena" />
+          <input type="text" name="nome" required value="<?= htmlspecialchars($editRow['nome'] ?? '') ?>" placeholder="Ex: Residencial Bela Vista, Fazenda Santa Helena" />
         </div>
+
+        <!-- ── LOCALIZAÇÃO ── -->
+        <div class="field field-full form-section-title"><i class="fa fa-map-marker-alt"></i> Localização</div>
+
         <div class="field">
-          <label>Cidade</label>
-          <input type="text" name="cidade" value="<?= htmlspecialchars($editRow['cidade'] ?? '') ?>" placeholder="Ex: Anápolis" />
+          <label>Cidade *</label>
+          <input type="text" name="cidade" required value="<?= htmlspecialchars($editRow['cidade'] ?? '') ?>" placeholder="Ex: Goiânia" />
         </div>
         <div class="field">
           <label>Estado</label>
           <select name="estado">
             <?php
-            $estados = ['GO','DF','MG','MT','MS','TO','BA','MG','SP','PR'];
+            $estados = ['AC','AL','AP','AM','BA','CE','DF','ES','GO','MA','MT','MS','MG','PA','PB','PR','PE','PI','RJ','RN','RS','RO','RR','SC','SP','SE','TO'];
             $sel = $editRow['estado'] ?? 'GO';
-            foreach ($estados as $e) echo "<option" . ($e===$sel?' selected':'') . ">$e</option>";
+            foreach ($estados as $e) echo "<option".($e===$sel?' selected':'').">$e</option>";
             ?>
           </select>
         </div>
-        <div class="field">
-          <label>Tipo</label>
-          <select name="tipo">
-            <?php foreach (['Fazenda','Sítio','Chácara','Terra Nua','Outros'] as $t):
-              $s = ($editRow['tipo'] ?? '') === $t ? ' selected' : ''; ?>
-              <option<?= $s ?>><?= $t ?></option>
-            <?php endforeach; ?>
-          </select>
+        <div class="field" data-grupo="urbano">
+          <label>Bairro / Região</label>
+          <input type="text" name="bairro" value="<?= htmlspecialchars($editRow['bairro'] ?? '') ?>" placeholder="Ex: Setor Bueno" />
         </div>
-        <div class="field">
+        <div class="field field-2 field-full" data-grupo="urbano">
+          <label>Endereço (Rua / Av.)</label>
+          <input type="text" name="endereco" value="<?= htmlspecialchars($editRow['endereco'] ?? '') ?>" placeholder="Ex: Rua das Acácias" />
+        </div>
+        <div class="field" data-grupo="urbano">
+          <label>Número</label>
+          <input type="text" name="numero" value="<?= htmlspecialchars($editRow['numero'] ?? '') ?>" placeholder="Ex: 142" />
+        </div>
+        <div class="field" data-grupo="urbano">
+          <label>Complemento</label>
+          <input type="text" name="complemento" value="<?= htmlspecialchars($editRow['complemento'] ?? '') ?>" placeholder="Ex: Apto 302, Bloco B" />
+        </div>
+
+        <!-- ── DIMENSÕES ── -->
+        <div class="field field-full form-section-title"><i class="fa fa-ruler-combined"></i> Dimensões</div>
+
+        <!-- Rural -->
+        <div class="field" data-grupo="rural">
           <label>Hectares</label>
           <input type="number" step="0.01" id="inp_hectares" name="hectares" value="<?= htmlspecialchars($editRow['hectares'] ?? '') ?>" placeholder="Ex: 484" />
         </div>
-        <div class="field">
+        <div class="field" data-grupo="rural">
           <label>Alqueires Goianos <small style="color:var(--muted)">(1 alq = 4,84 ha)</small></label>
           <input type="number" step="0.01" id="inp_alqueires" name="alqueires" value="<?= htmlspecialchars($editRow['alqueires'] ?? '') ?>" placeholder="Ex: 100" />
         </div>
-        <div class="field">
-          <label>Preço (R$)</label>
-          <input type="text" id="inp_preco" name="preco" value="<?= htmlspecialchars(!empty($editRow['preco']) ? number_format((float)$editRow['preco'], 2, ',', '.') : '') ?>" placeholder="Ex: 2.500.000,00" />
-          <input type="hidden" id="inp_preco_raw" name="preco_raw" value="<?= htmlspecialchars($editRow['preco'] ?? '') ?>" />
+
+        <!-- Casa -->
+        <div class="field" data-grupo="casa">
+          <label>Área Construída (m²)</label>
+          <input type="number" step="0.01" name="area_construida" value="<?= htmlspecialchars($editRow['area_construida'] ?? '') ?>" placeholder="Ex: 180" />
         </div>
-        <div class="field">
+        <div class="field" data-grupo="casa">
+          <label>Área do Terreno (m²)</label>
+          <input type="number" step="0.01" name="area_terreno" value="<?= htmlspecialchars($editRow['area_terreno'] ?? '') ?>" placeholder="Ex: 360" />
+        </div>
+
+        <!-- Apartamento -->
+        <div class="field" data-grupo="apartamento">
+          <label>Área Privativa (m²)</label>
+          <input type="number" step="0.01" name="area_privativa" value="<?= htmlspecialchars($editRow['area_privativa'] ?? '') ?>" placeholder="Ex: 95" />
+        </div>
+        <div class="field" data-grupo="apartamento">
+          <label>Área Total (m²)</label>
+          <input type="number" step="0.01" name="area_total" value="<?= htmlspecialchars($editRow['area_total'] ?? '') ?>" placeholder="Ex: 120" />
+        </div>
+        <div class="field" data-grupo="apartamento">
+          <label>Andar</label>
+          <input type="number" name="andar" value="<?= htmlspecialchars($editRow['andar'] ?? '') ?>" placeholder="Ex: 5" />
+        </div>
+        <div class="field" data-grupo="apartamento">
+          <label>Total de Andares do Edifício</label>
+          <input type="number" name="total_andares" value="<?= htmlspecialchars($editRow['total_andares'] ?? '') ?>" placeholder="Ex: 12" />
+        </div>
+
+        <!-- Lote -->
+        <div class="field" data-grupo="lote">
+          <label>Área do Lote (m²)</label>
+          <input type="number" step="0.01" name="area_lote" value="<?= htmlspecialchars($editRow['area_lote'] ?? '') ?>" placeholder="Ex: 450" />
+        </div>
+        <div class="field" data-grupo="lote">
+          <label>Testada (m)</label>
+          <input type="number" step="0.01" name="testada" value="<?= htmlspecialchars($editRow['testada'] ?? '') ?>" placeholder="Ex: 15" />
+        </div>
+        <div class="field" data-grupo="lote">
+          <label>Profundidade (m)</label>
+          <input type="number" step="0.01" name="profundidade" value="<?= htmlspecialchars($editRow['profundidade'] ?? '') ?>" placeholder="Ex: 30" />
+        </div>
+
+        <!-- Comercial (Sala, Ponto, Galpão) -->
+        <div class="field" data-grupo="comercial">
+          <label>Área (m²)</label>
+          <input type="number" step="0.01" name="area_imovel" value="<?= htmlspecialchars($editRow['area_imovel'] ?? '') ?>" placeholder="Ex: 80" />
+        </div>
+        <div class="field" data-grupo="sala">
+          <label>Andar</label>
+          <input type="number" name="andar" value="<?= htmlspecialchars($editRow['andar'] ?? '') ?>" placeholder="Ex: 3" />
+        </div>
+
+        <!-- Galpão -->
+        <div class="field" data-grupo="galpao">
+          <label>Pé Direito (m)</label>
+          <input type="number" step="0.01" name="pe_direito" value="<?= htmlspecialchars($editRow['pe_direito'] ?? '') ?>" placeholder="Ex: 8" />
+        </div>
+        <div class="field" data-grupo="galpao">
+          <label>Número de Docas</label>
+          <input type="number" name="docas" value="<?= htmlspecialchars($editRow['docas'] ?? '') ?>" placeholder="Ex: 2" />
+        </div>
+        <div class="field" data-grupo="galpao">
+          <label>Alimentação Elétrica</label>
+          <select name="energia">
+            <?php foreach (['','Monofásico','Bifásico','Trifásico'] as $e):
+              $s = ($editRow['energia'] ?? '') === $e ? ' selected' : ''; ?>
+              <option value="<?= $e ?>"<?= $s ?>><?= $e ?: 'Selecione...' ?></option>
+            <?php endforeach; ?>
+          </select>
+        </div>
+
+        <!-- Ponto Comercial -->
+        <div class="field" data-grupo="ponto">
+          <label>Tipo de Ponto</label>
+          <select name="tipo_ponto">
+            <?php foreach (['','Loja de rua','Loja em shopping','Quiosque','Espaço em galeria','Outro'] as $tp):
+              $s = ($editRow['tipo_ponto'] ?? '') === $tp ? ' selected' : ''; ?>
+              <option value="<?= $tp ?>"<?= $s ?>><?= $tp ?: 'Selecione...' ?></option>
+            <?php endforeach; ?>
+          </select>
+        </div>
+
+        <!-- ── COMPOSIÇÃO ── [residencial + garagem comercial] -->
+        <div class="field field-full form-section-title" data-grupo="residencial"><i class="fa fa-door-open"></i> Composição</div>
+
+        <div class="field" data-grupo="residencial">
+          <label>Quartos</label>
+          <select name="quartos">
+            <?php foreach (['','1','2','3','4','5','6+'] as $q):
+              $s = ($editRow['quartos'] ?? '') === $q ? ' selected' : ''; ?>
+              <option value="<?= $q ?>"<?= $s ?>><?= $q ?: 'Selecione...' ?></option>
+            <?php endforeach; ?>
+          </select>
+        </div>
+        <div class="field" data-grupo="residencial">
+          <label>Suítes</label>
+          <select name="suites">
+            <?php foreach (['','0','1','2','3','4','5+'] as $q):
+              $s = ($editRow['suites'] ?? '') === $q ? ' selected' : ''; ?>
+              <option value="<?= $q ?>"<?= $s ?>><?= $q ?: 'Selecione...' ?></option>
+            <?php endforeach; ?>
+          </select>
+        </div>
+        <div class="field" data-grupo="residencial">
+          <label>Banheiros</label>
+          <select name="banheiros">
+            <?php foreach (['','1','2','3','4','5+'] as $q):
+              $s = ($editRow['banheiros'] ?? '') === $q ? ' selected' : ''; ?>
+              <option value="<?= $q ?>"<?= $s ?>><?= $q ?: 'Selecione...' ?></option>
+            <?php endforeach; ?>
+          </select>
+        </div>
+        <div class="field" data-grupo="residencial">
+          <label>Lavabos</label>
+          <select name="lavabos">
+            <?php foreach (['','0','1','2','3+'] as $q):
+              $s = ($editRow['lavabos'] ?? '') === $q ? ' selected' : ''; ?>
+              <option value="<?= $q ?>"<?= $s ?>><?= $q ?: 'Selecione...' ?></option>
+            <?php endforeach; ?>
+          </select>
+        </div>
+        <div class="field" data-grupo="residencial">
+          <label>Vagas de Garagem</label>
+          <select name="garagem">
+            <?php foreach (['','0','1','2','3','4','5+'] as $q):
+              $s = ($editRow['garagem'] ?? '') === $q ? ' selected' : ''; ?>
+              <option value="<?= $q ?>"<?= $s ?>><?= $q ?: 'Selecione...' ?></option>
+            <?php endforeach; ?>
+          </select>
+        </div>
+        <div class="field" data-grupo="residencial">
+          <label>Tipo de Garagem</label>
+          <select name="tipo_garagem">
+            <?php foreach (['','Coberta','Descoberta','Mista','Box privativo','Sem garagem'] as $tg):
+              $s = ($editRow['tipo_garagem'] ?? '') === $tg ? ' selected' : ''; ?>
+              <option value="<?= $tg ?>"<?= $s ?>><?= $tg ?: 'Selecione...' ?></option>
+            <?php endforeach; ?>
+          </select>
+        </div>
+        <div class="field" data-grupo="residencial">
+          <label>Posição Solar</label>
+          <select name="posicao_solar">
+            <?php foreach (['','Frente','Fundos','Lateral direita','Lateral esquerda','Frente e fundos'] as $ps):
+              $s = ($editRow['posicao_solar'] ?? '') === $ps ? ' selected' : ''; ?>
+              <option value="<?= $ps ?>"<?= $s ?>><?= $ps ?: 'Selecione...' ?></option>
+            <?php endforeach; ?>
+          </select>
+        </div>
+        <div class="field" data-grupo="residencial">
+          <label>Mobiliado</label>
+          <select name="mobiliado">
+            <?php foreach (['','Sim','Não','Semi-mobiliado'] as $m):
+              $s = ($editRow['mobiliado'] ?? '') === $m ? ' selected' : ''; ?>
+              <option value="<?= $m ?>"<?= $s ?>><?= $m ?: 'Selecione...' ?></option>
+            <?php endforeach; ?>
+          </select>
+        </div>
+
+        <!-- ── CARACTERÍSTICAS RESIDENCIAIS ── -->
+        <div class="field field-full form-section-title" data-grupo="caract_res"><i class="fa fa-star"></i> Características e Diferenciais</div>
+        <div class="field field-full" data-grupo="caract_res">
+          <?php
+          $caract_res = ['Piscina','Churrasqueira','Área gourmet','Jardim','Playground','Academia','Quadra poliesportiva','Salão de festas','Portaria 24h','Elevador','Gerador','Energia solar','Ar-condicionado','Aquecimento solar','Sauna','Spa/Hidromassagem','Home office','Closet','Despensa','Lavanderia','Terraço/Varanda gourmet','Vista privilegiada'];
+          $sel_caract = is_array($editRow['caracteristicas'] ?? null) ? ($editRow['caracteristicas'] ?? []) : [];
+          ?>
+          <div class="caract-grid">
+            <?php foreach ($caract_res as $c): ?>
+            <label class="caract-item">
+              <input type="checkbox" name="caracteristicas[]" value="<?= $c ?>" <?= in_array($c, $sel_caract) ? 'checked' : '' ?> />
+              <?= $c ?>
+            </label>
+            <?php endforeach; ?>
+          </div>
+        </div>
+
+        <!-- ── CARACTERÍSTICAS COMERCIAIS ── -->
+        <div class="field field-full form-section-title" data-grupo="caract_com"><i class="fa fa-building"></i> Características Comerciais</div>
+        <div class="field field-full" data-grupo="caract_com">
+          <?php
+          $caract_com = ['Elevador','Recepção','Copa/Cozinha','CFTV','Gerador','Ar-condicionado central','Estacionamento rotativo','Rampa para deficientes','Banheiro acessível','Sala de reuniões','Sala de servidores','Depósito'];
+          ?>
+          <div class="caract-grid">
+            <?php foreach ($caract_com as $c): ?>
+            <label class="caract-item">
+              <input type="checkbox" name="caracteristicas[]" value="<?= $c ?>" <?= in_array($c, $sel_caract) ? 'checked' : '' ?> />
+              <?= $c ?>
+            </label>
+            <?php endforeach; ?>
+          </div>
+        </div>
+
+        <!-- ── INFORMAÇÕES RURAIS ── -->
+        <div class="field field-full form-section-title" data-grupo="rural"><i class="fa fa-tractor"></i> Informações Rurais</div>
+
+        <div class="field" data-grupo="rural">
           <label>Água / Irrigação</label>
-          <input type="text" name="agua" value="<?= htmlspecialchars($editRow['agua'] ?? '') ?>" placeholder="Ex: Rio perene, pivô" />
+          <input type="text" name="agua" value="<?= htmlspecialchars($editRow['agua'] ?? '') ?>" placeholder="Ex: Rio perene, pivô central" />
         </div>
-        <div class="field">
+        <div class="field" data-grupo="rural">
           <label>Solo</label>
           <input type="text" name="solo" value="<?= htmlspecialchars($editRow['solo'] ?? '') ?>" placeholder="Ex: Latossolo vermelho" />
         </div>
-        <div class="field">
-          <label>Benfeitorias</label>
-          <input type="text" name="benfeitorias" value="<?= htmlspecialchars($editRow['benfeitorias'] ?? '') ?>" placeholder="Ex: Casa sede, curral, silos" />
+        <div class="field" data-grupo="rural">
+          <label>Topografia</label>
+          <select name="topografia">
+            <?php foreach (['','Plano','Suave ondulado','Ondulado','Forte ondulado','Montanhoso'] as $tp):
+              $s = ($editRow['topografia'] ?? '') === $tp ? ' selected' : ''; ?>
+              <option value="<?= $tp ?>"<?= $s ?>><?= $tp ?: 'Selecione...' ?></option>
+            <?php endforeach; ?>
+          </select>
         </div>
-        <div class="field">
+        <div class="field" data-grupo="rural">
+          <label>Benfeitorias</label>
+          <input type="text" name="benfeitorias" value="<?= htmlspecialchars($editRow['benfeitorias'] ?? '') ?>" placeholder="Ex: Casa sede, curral, silos, paiol" />
+        </div>
+        <div class="field" data-grupo="rural">
           <label>Acesso</label>
-          <input type="text" name="acesso" value="<?= htmlspecialchars($editRow['acesso'] ?? '') ?>" placeholder="Ex: Asfalto + 5 km terra" />
+          <input type="text" name="acesso" value="<?= htmlspecialchars($editRow['acesso'] ?? '') ?>" placeholder="Ex: Asfalto + 5 km de terra" />
         </div>
 
-        <div class="field field-full">
-          <label>Descrição</label>
-          <textarea name="descricao" rows="5" placeholder="Descreva a propriedade com detalhes relevantes para o comprador..."><?= htmlspecialchars($editRow['descricao'] ?? '') ?></textarea>
+        <!-- ── LOTE ── -->
+        <div class="field field-full form-section-title" data-grupo="lote"><i class="fa fa-draw-polygon"></i> Informações do Lote</div>
+
+        <div class="field" data-grupo="lote">
+          <label>Topografia</label>
+          <select name="topografia">
+            <?php foreach (['','Plano','Aclive','Declive','Irregular'] as $tp):
+              $s = ($editRow['topografia'] ?? '') === $tp ? ' selected' : ''; ?>
+              <option value="<?= $tp ?>"<?= $s ?>><?= $tp ?: 'Selecione...' ?></option>
+            <?php endforeach; ?>
+          </select>
         </div>
+        <div class="field" data-grupo="lote">
+          <label>Zoneamento</label>
+          <select name="zoneamento">
+            <?php foreach (['','Residencial','Comercial','Misto','Industrial','Rural'] as $z):
+              $s = ($editRow['zoneamento'] ?? '') === $z ? ' selected' : ''; ?>
+              <option value="<?= $z ?>"<?= $s ?>><?= $z ?: 'Selecione...' ?></option>
+            <?php endforeach; ?>
+          </select>
+        </div>
+        <div class="field" data-grupo="lote">
+          <label>Situação</label>
+          <select name="situacao_lote">
+            <?php foreach (['','Meio de quadra','Esquina','Final de rua','Frente para parque'] as $sl):
+              $s = ($editRow['situacao_lote'] ?? '') === $sl ? ' selected' : ''; ?>
+              <option value="<?= $sl ?>"<?= $s ?>><?= $sl ?: 'Selecione...' ?></option>
+            <?php endforeach; ?>
+          </select>
+        </div>
+        <div class="field field-full" data-grupo="lote">
+          <label>Infraestrutura disponível</label>
+          <?php
+          $infra_opts = ['Água encanada','Energia elétrica','Esgoto','Pavimentação','Calçada','Internet/Fibra','Gás natural'];
+          $sel_infra  = is_array($editRow['infra_lote'] ?? null) ? ($editRow['infra_lote'] ?? []) : [];
+          ?>
+          <div class="caract-grid" style="margin-top:8px">
+            <?php foreach ($infra_opts as $inf): ?>
+            <label class="caract-item">
+              <input type="checkbox" name="infra_lote[]" value="<?= $inf ?>" <?= in_array($inf, $sel_infra) ? 'checked' : '' ?> />
+              <?= $inf ?>
+            </label>
+            <?php endforeach; ?>
+          </div>
+        </div>
+
+        <!-- ── CONDOMÍNIO / EDIFÍCIO ── -->
+        <div class="field field-full form-section-title" data-grupo="cond"><i class="fa fa-building"></i> Condomínio / Edifício / Loteamento</div>
+
+        <div class="field" data-grupo="cond">
+          <label>Nome do Condomínio / Edifício / Loteamento</label>
+          <input type="text" name="cond_nome" value="<?= htmlspecialchars($editRow['cond_nome'] ?? '') ?>" placeholder="Ex: Residencial Bela Vista, Edifício Ipê" />
+        </div>
+        <div class="field" data-grupo="cond">
+          <label>Condomínio (R$/mês)</label>
+          <input type="text" class="inp-moeda" id="inp_condominio" name="condominio"
+                 value="<?= !empty($editRow['condominio']) ? number_format((float)$editRow['condominio'], 2, ',', '.') : '' ?>"
+                 placeholder="Ex: 450,00" />
+        </div>
+
+        <!-- ── FINANCEIRO ── -->
+        <div class="field field-full form-section-title"><i class="fa fa-dollar-sign"></i> Financeiro</div>
+
+        <div class="field">
+          <label>Preço (R$)</label>
+          <input type="text" class="inp-moeda" id="inp_preco" name="preco"
+                 value="<?= !empty($editRow['preco']) ? number_format((float)$editRow['preco'], 2, ',', '.') : '' ?>"
+                 placeholder="Ex: 850.000,00" />
+          <input type="hidden" id="inp_preco_raw" name="preco_raw" value="<?= htmlspecialchars($editRow['preco'] ?? '') ?>" />
+        </div>
+        <div class="field" data-grupo="financeiro">
+          <label>IPTU (R$/ano)</label>
+          <input type="text" class="inp-moeda" id="inp_iptu" name="iptu"
+                 value="<?= !empty($editRow['iptu']) ? number_format((float)$editRow['iptu'], 2, ',', '.') : '' ?>"
+                 placeholder="Ex: 1.200,00" />
+        </div>
+
+        <!-- ── DESCRIÇÃO ── -->
+        <div class="field field-full form-section-title"><i class="fa fa-align-left"></i> Descrição</div>
+
+        <div class="field field-full">
+          <textarea name="descricao" rows="5" placeholder="Descreva o imóvel com detalhes relevantes para o comprador..."><?= htmlspecialchars($editRow['descricao'] ?? '') ?></textarea>
+        </div>
+
+        <!-- ── MÍDIA ── -->
+        <div class="field field-full form-section-title"><i class="fa fa-images"></i> Fotos e Vídeo</div>
 
         <!-- FOTOS EXISTENTES -->
         <?php if (!empty($editRow['fotos'])): ?>
@@ -1013,17 +1401,15 @@ $okMsg   = match($ok) {
         </div>
         <?php endif; ?>
 
-        <!-- UPLOAD FOTOS -->
         <div class="field field-full">
           <label>
             <?= !empty($editRow['fotos']) ? 'Adicionar mais fotos' : 'Fotos' ?>
-            <small style="color:var(--muted)"> — JPG/PNG/WebP · selecione e arraste para ordenar antes de salvar</small>
+            <small style="color:var(--muted)"> — JPG/PNG/WebP · selecione e arraste para ordenar</small>
           </label>
           <input type="file" id="fotoFileInput" accept="image/jpeg,image/png,image/webp,image/gif" multiple />
           <div class="fotos-preview" id="new-fotos-preview" style="margin-top:10px;min-height:0"></div>
         </div>
 
-        <!-- UPLOAD VÍDEO -->
         <div class="field field-full">
           <label>Vídeo (arquivo) <small style="color:var(--muted)"> — MP4/WebM</small></label>
           <?php if (!empty($editRow['video_file'])): ?>
@@ -1035,24 +1421,20 @@ $okMsg   = match($ok) {
         </div>
 
         <div class="field field-full">
-          <label>Link do vídeo <small style="color:var(--muted)"> — YouTube, Google Drive ou Vimeo (prioridade sobre upload)</small></label>
-          <input type="url" name="video_link" value="<?= htmlspecialchars($editRow['video_link'] ?? '') ?>" placeholder="YouTube, Google Drive ou Vimeo..." />
-          <div style="margin-top:8px;padding:12px 14px;background:var(--bg2);border-radius:var(--radius-sm);font-size:.8rem;color:var(--muted);line-height:1.7;">
-            <strong style="color:var(--text)">Como obter o link do Google Drive:</strong><br>
-            1. Clique com botão direito no vídeo no Drive → <em>Compartilhar</em><br>
-            2. Em "Acesso geral" selecione <em>"Qualquer pessoa com o link"</em><br>
-            3. Clique em <em>Copiar link</em> e cole aqui<br>
-            <small>Formatos aceitos: <code>drive.google.com/file/d/ID/view</code> ou <code>drive.google.com/open?id=ID</code></small>
-          </div>
+          <label>Link do vídeo <small style="color:var(--muted)"> — YouTube, Google Drive ou Vimeo</small></label>
+          <input type="url" name="video_link" value="<?= htmlspecialchars($editRow['video_link'] ?? '') ?>" placeholder="https://www.youtube.com/watch?v=..." />
         </div>
 
+        <!-- ── VISIBILIDADE ── -->
+        <div class="field field-full form-section-title"><i class="fa fa-eye"></i> Visibilidade</div>
+
         <div class="field field-full">
-          <label>Visibilidade</label>
           <div class="toggle-wrap">
             <input type="checkbox" name="publicado" id="chkPub" <?= !empty($editRow['publicado']) ? 'checked' : '' ?> />
             <span>Publicar no site público</span>
           </div>
         </div>
+
       </div>
 
       <div class="form-actions">
@@ -1522,7 +1904,6 @@ $okMsg   = match($ok) {
   const ALQ = 4.84;
   const inpHa  = document.getElementById('inp_hectares');
   const inpAlq = document.getElementById('inp_alqueires');
-
   if (inpHa && inpAlq) {
     inpHa.addEventListener('input', () => {
       const v = parseFloat(inpHa.value);
@@ -1533,6 +1914,57 @@ $okMsg   = match($ok) {
       inpHa.value = isNaN(v) ? '' : (v * ALQ).toFixed(2);
     });
   }
+
+  /* ── FORMATAÇÃO DE CAMPOS MONETÁRIOS ── */
+  document.querySelectorAll('.inp-moeda').forEach(inp => {
+    if (inp.id === 'inp_preco') return; // já tratado acima
+    inp.addEventListener('input', () => {
+      let raw = inp.value.replace(/\D/g, '');
+      if (!raw) { inp.value = ''; return; }
+      inp.value = (parseInt(raw) / 100).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    });
+    inp.addEventListener('blur', () => {
+      let raw = inp.value.replace(/\./g, '').replace(',', '.');
+      const n = parseFloat(raw);
+      if (!isNaN(n)) inp.value = n.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    });
+  });
+
+  /* ── CAMPOS POR TIPO DE IMÓVEL ── */
+  const TIPO_GRUPOS = {
+    'Fazenda':         ['rural'],
+    'Sítio':           ['rural'],
+    'Chácara':         ['rural'],
+    'Terra Nua':       ['rural'],
+    'Casa':            ['urbano','casa','residencial','caract_res','cond','financeiro'],
+    'Apartamento':     ['urbano','apartamento','residencial','caract_res','cond','financeiro'],
+    'Lote':            ['urbano','lote','cond','financeiro'],
+    'Sala Comercial':  ['urbano','comercial','sala','caract_com','cond','financeiro'],
+    'Ponto Comercial': ['urbano','comercial','ponto','cond','financeiro'],
+    'Galpão':          ['urbano','comercial','galpao','caract_com','cond','financeiro'],
+    'Outros':          ['urbano','financeiro'],
+  };
+
+  function atualizarCampos() {
+    const tipo   = document.getElementById('inp_tipo');
+    if (!tipo) return;
+    const grupos = TIPO_GRUPOS[tipo.value] || [];
+    document.querySelectorAll('[data-grupo]').forEach(el => {
+      const g      = el.dataset.grupo;
+      const visivel = grupos.includes(g);
+      el.style.display = visivel ? '' : 'none';
+    });
+  }
+
+  /* aplica ao carregar (modo edição) */
+  (function() {
+    const tipo = document.getElementById('inp_tipo');
+    if (tipo && tipo.value) atualizarCampos();
+    else if (tipo) {
+      // esconde todos os grupos até o usuário selecionar
+      document.querySelectorAll('[data-grupo]').forEach(el => el.style.display = 'none');
+    }
+  })();
 </script>
 </body>
 </html>
