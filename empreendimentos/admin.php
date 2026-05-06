@@ -816,7 +816,7 @@ $okMsg   = match($ok) {
     <?php if (can('gerenciar_imagens')): ?>
     <a href="admin.php?section=imagens" class="snav-btn <?= $section==='imagens'?'active':'' ?>"><i class="fa fa-images"></i> Imagens</a>
     <?php endif; ?>
-    <?php if ($isAdmin || can('ver_filiados') || can('gerenciar_filiados')): ?>
+    <?php if ($isAdmin): ?>
     <a href="admin.php?section=filiados" class="snav-btn <?= $section==='filiados'?'active':'' ?>"><i class="fa fa-users"></i> Filiados</a>
     <?php endif; ?>
   </nav>
@@ -1138,7 +1138,7 @@ $okMsg   = match($ok) {
   </div>
   <?php endif; ?>
 
-<?php elseif ($section === 'filiados' && ($isAdmin || can('ver_filiados') || can('gerenciar_filiados'))): ?>
+<?php elseif ($section === 'filiados' && $isAdmin): ?>
 
   <!-- ════ FILIADOS ════ -->
   <?php if ($isAdmin): ?>
