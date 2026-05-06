@@ -1006,7 +1006,7 @@ function openModal(idx, goVideo = false) {
   } else {
     slidesEl.innerHTML = slides.map(s => {
       if (s.type === 'img')   return `<img class="gallery-slide" src="${s.src}" alt="" />`;
-      if (s.type === 'yt')    return `<div class="yt-player-wrap"><div class="yt-wrapper"><iframe id="ytPlayerFrame" class="gallery-slide video-slide" src="${s.src}" frameborder="0" allow="autoplay; encrypted-media"></iframe><div class="yt-click-block"></div></div><div class="video-prog-bar"><div class="video-prog-fill"></div></div></div>`;
+      if (s.type === 'yt')    return `<div class="yt-player-wrap"><div class="yt-wrapper"><iframe id="ytPlayerFrame" class="gallery-slide video-slide" src="${s.src}" frameborder="0" allow="autoplay; encrypted-media" style="opacity:0;transition:opacity .4s"></iframe><div class="yt-click-block"></div></div><div class="video-prog-bar"><div class="video-prog-fill"></div></div></div>`;
       if (s.type === 'video') return `<div class="video-player-wrap"><video class="gallery-slide" src="${s.src}" autoplay muted playsinline loop></video><div class="video-prog-bar"><div class="video-prog-fill"></div></div></div>`;
     }).join('');
     const vidEl = slidesEl.querySelector('video');
@@ -1119,7 +1119,11 @@ function createYTPlayer() {
   if (ytPlayer) { try { ytPlayer.destroy(); } catch(e) {} ytPlayer = null; }
   ytPlayer = new YT.Player('ytPlayerFrame', {
     events: {
-      onReady: e => { e.target.playVideo(); },
+      onReady: e => {
+        e.target.playVideo();
+        const iframe = document.getElementById('ytPlayerFrame');
+        if (iframe) iframe.style.opacity = '1';
+      },
       onStateChange: e => {
         if (e.data === YT.PlayerState.PLAYING) startYTProgress();
         else stopYTProgress();
