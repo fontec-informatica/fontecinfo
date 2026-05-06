@@ -192,7 +192,7 @@ if ($isAuth) {
     }
 
     /* SALVAR FILIADO */
-    if (isset($_POST['action']) && $_POST['action'] === 'save_filiado' && $isAdmin) {
+    if (isset($_POST['action']) && $_POST['action'] === 'save_filiado' && ($isAdmin || can('gerenciar_filiados'))) {
         $filiados = loadFiliados();
         $fid      = $_POST['filiado_id'] ?? '';
         $isNewF   = empty($fid);
@@ -228,7 +228,7 @@ if ($isAuth) {
     }
 
     /* EXCLUIR FILIADO */
-    if (isset($_GET['del_filiado']) && $isAdmin) {
+    if (isset($_GET['del_filiado']) && ($isAdmin || can('gerenciar_filiados'))) {
         $filiados = array_filter(loadFiliados(), fn($f) => $f['id'] !== $_GET['del_filiado']);
         saveFiliados($filiados);
         header('Location: admin.php?ok=del_filiado&section=filiados');
@@ -338,9 +338,9 @@ if (!empty($_GET['edit']) && $isAuth && can('editar_imoveis')) {
     $eid = $_GET['edit'];
     foreach ($rows as $r) { if ($r['id'] === $eid) { $editRow = $r; break; } }
 }
-$filiados    = $isAdmin ? loadFiliados() : [];
+$filiados    = ($isAdmin || can('gerenciar_filiados')) ? loadFiliados() : [];
 $editFiliado = null;
-if (!empty($_GET['edit_filiado']) && $isAdmin) {
+if (!empty($_GET['edit_filiado']) && ($isAdmin || can('gerenciar_filiados'))) {
     foreach ($filiados as $f) { if ($f['id'] === $_GET['edit_filiado']) { $editFiliado = $f; break; } }
 }
 $section = $_GET['section'] ?? 'imoveis';
@@ -816,7 +816,7 @@ $okMsg   = match($ok) {
     <?php if (can('gerenciar_imagens')): ?>
     <a href="admin.php?section=imagens" class="snav-btn <?= $section==='imagens'?'active':'' ?>"><i class="fa fa-images"></i> Imagens</a>
     <?php endif; ?>
-    <?php if ($isAdmin): ?>
+    <?php if ($isAdmin || can('gerenciar_filiados')): ?>
     <a href="admin.php?section=filiados" class="snav-btn <?= $section==='filiados'?'active':'' ?>"><i class="fa fa-users"></i> Filiados</a>
     <?php endif; ?>
   </nav>
@@ -1138,10 +1138,10 @@ $okMsg   = match($ok) {
   </div>
   <?php endif; ?>
 
-<?php elseif ($section === 'filiados' && $isAdmin): ?>
+<?php elseif ($section === 'filiados' && ($isAdmin || can('gerenciar_filiados'))): ?>
 
   <!-- ════ FILIADOS ════ -->
-  <?php if ($isAdmin): ?>
+  <?php if ($isAdmin || can('gerenciar_filiados')): ?>
   <div class="form-card">
     <h2><?= $editFiliado ? '<i class="fa fa-user-edit"></i> Editar Filiado' : '<i class="fa fa-user-plus"></i> Novo Filiado' ?></h2>
     <form method="POST">
@@ -1212,7 +1212,7 @@ $okMsg   = match($ok) {
   <div class="table-wrap">
     <table>
       <thead>
-        <tr><th>Nome</th><th>E-mail</th><th>Telefone</th><th>Permissões</th><th>Status</th><?php if($isAdmin):?><th>Ações</th><?php endif;?></tr>
+        <tr><th>Nome</th><th>E-mail</th><th>Telefone</th><th>Permissões</th><th>Status</th><?php if($isAdmin || can('gerenciar_filiados')):?><th>Ações</th><?php endif;?></tr>
       </thead>
       <tbody>
         <?php if (empty($filiados)): ?>
@@ -1241,7 +1241,7 @@ $okMsg   = match($ok) {
                 <span class="badge-inativo"><i class="fa fa-circle"></i> Inativo</span>
               <?php endif; ?>
             </td>
-            <?php if ($isAdmin): ?>
+            <?php if ($isAdmin || can('gerenciar_filiados')): ?>
             <td>
               <div class="td-actions">
                 <a href="admin.php?section=filiados&edit_filiado=<?= urlencode($f['id']) ?>" class="btn-icon" title="Editar"><i class="fa fa-edit"></i></a>
