@@ -8,6 +8,7 @@ define('UPLOAD_DIR',  __DIR__ . '/uploads/');
 define('ALLOWED_IMG',   ['image/jpeg','image/png','image/webp','image/gif']);
 define('ALLOWED_VID',   ['video/mp4','video/webm','video/ogg']);
 define('FILIADOS_FILE', __DIR__ . '/data/filiados.json');
+define('COOKIE_SECRET', 'fontec_empr_2026_sec');
 define('PERMS_LIST', [
     'ver_imoveis'        => 'Visualizar imóveis',
     'cadastrar_imoveis'  => 'Cadastrar imóveis',
@@ -117,14 +118,45 @@ function can(string $perm): bool {
 
 /* ── AUTH ── */
 $loginError = '';
+$secure     = isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off';
+
+/* auto-login via cookie "lembrar-me" */
+if (empty($_SESSION['admin']) && empty($_SESSION['filiado'])) {
+    if (isset($_COOKIE['adm_tok'])) {
+        $exp = hash_hmac('sha256', 'admin', COOKIE_SECRET . ADMIN_PASS);
+        if (hash_equals($exp, $_COOKIE['adm_tok'])) $_SESSION['admin'] = true;
+    }
+    if (empty($_SESSION['admin']) && isset($_COOKIE['fil_tok'])) {
+        $parts = explode('|', $_COOKIE['fil_tok'], 2);
+        if (count($parts) === 2) {
+            [$fid, $sig] = $parts;
+            foreach (loadFiliados() as $f) {
+                if ($f['id'] === $fid && !empty($f['ativo'])) {
+                    $exp = hash_hmac('sha256', $fid, COOKIE_SECRET . ($f['senha'] ?? ''));
+                    if (hash_equals($exp, $sig)) {
+                        $_SESSION['filiado'] = ['id' => $f['id'], 'nome' => $f['nome'], 'perms' => $f['perms'] ?? []];
+                        break;
+                    }
+                }
+            }
+        }
+    }
+}
+
 if (isset($_POST['logout'])) {
     session_destroy();
+    setcookie('adm_tok', '', time() - 3600, '/', '', $secure, true);
+    setcookie('fil_tok', '', time() - 3600, '/', '', $secure, true);
     header('Location: admin.php');
     exit;
 }
 if (isset($_POST['password'])) {
     if ($_POST['password'] === ADMIN_PASS) {
         $_SESSION['admin'] = true;
+        if (!empty($_POST['remember'])) {
+            $tok = hash_hmac('sha256', 'admin', COOKIE_SECRET . ADMIN_PASS);
+            setcookie('adm_tok', $tok, time() + 30*24*3600, '/', '', $secure, true);
+        }
     } else {
         $loginError = 'Senha incorreta. Tente novamente.';
     }
@@ -136,6 +168,10 @@ if (isset($_POST['filiado_login'])) {
             && !empty($f['ativo'])
             && password_verify($_POST['filiado_senha'] ?? '', $f['senha'] ?? '')) {
             $_SESSION['filiado'] = ['id' => $f['id'], 'nome' => $f['nome'], 'perms' => $f['perms'] ?? []];
+            if (!empty($_POST['remember'])) {
+                $tok = hash_hmac('sha256', $f['id'], COOKIE_SECRET . ($f['senha'] ?? ''));
+                setcookie('fil_tok', $f['id'] . '|' . $tok, time() + 30*24*3600, '/', '', $secure, true);
+            }
             $loginError = '';
             break;
         }
@@ -690,6 +726,13 @@ $okMsg   = match($ok) {
     }
     .progress-label { font-size: .8rem; color: var(--muted); }
 
+    .remember-wrap {
+      display: flex; align-items: center; gap: 8px;
+      font-size: .84rem; color: var(--muted);
+      margin-bottom: 16px; cursor: pointer; user-select: none; text-align: left;
+    }
+    .remember-wrap input { accent-color: var(--accent); width: 16px; height: 16px; cursor: pointer; flex-shrink: 0; }
+
     /* LOGIN TABS */
     .login-tabs { display: flex; gap: 8px; margin-bottom: 20px; }
     .ltab {
@@ -786,25 +829,39 @@ $okMsg   = match($ok) {
       <div class="login-error"><i class="fa fa-exclamation-triangle"></i> <?= $loginError ?></div>
     <?php endif; ?>
     <div id="tab-admin">
-      <form method="POST">
+      <form method="POST" autocomplete="on">
+        <!-- campo oculto necessário para gerenciadores de senha e Face ID/Touch ID -->
+        <input type="text" name="username" value="Administrador" autocomplete="username"
+               style="position:absolute;opacity:0;pointer-events:none;height:0;width:0;overflow:hidden" tabindex="-1" aria-hidden="true" />
         <div class="field">
           <label for="pw">Senha de acesso</label>
-          <input type="password" id="pw" name="password" placeholder="••••••••••••" autofocus />
+          <input type="password" id="pw" name="password" placeholder="••••••••••••"
+                 autocomplete="current-password" autofocus />
         </div>
+        <label class="remember-wrap">
+          <input type="checkbox" name="remember" value="1" />
+          <span>Lembrar-me por 30 dias</span>
+        </label>
         <button class="btn-primary" type="submit"><i class="fa fa-lock"></i> Entrar</button>
       </form>
     </div>
     <div id="tab-filiado" style="display:none">
-      <form method="POST">
+      <form method="POST" autocomplete="on">
         <input type="hidden" name="filiado_login" value="1" />
         <div class="field">
           <label>E-mail</label>
-          <input type="email" name="filiado_email" placeholder="seu@email.com" />
+          <input type="email" name="filiado_email" placeholder="seu@email.com"
+                 autocomplete="email" />
         </div>
         <div class="field">
           <label>Senha</label>
-          <input type="password" name="filiado_senha" placeholder="••••••••••••" />
+          <input type="password" name="filiado_senha" placeholder="••••••••••••"
+                 autocomplete="current-password" />
         </div>
+        <label class="remember-wrap">
+          <input type="checkbox" name="remember" value="1" />
+          <span>Lembrar-me por 30 dias</span>
+        </label>
         <button class="btn-primary" type="submit"><i class="fa fa-user"></i> Entrar como Filiado</button>
       </form>
     </div>
