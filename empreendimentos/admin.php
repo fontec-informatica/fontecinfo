@@ -1177,10 +1177,16 @@ $okMsg   = match($ok) {
         </div>
         <div class="field field-full">
           <label>Permissões</label>
-          <div class="perms-grid">
+          <?php $todasPerms = array_keys(PERMS_LIST); $temTodas = !array_diff($todasPerms, $editFiliado['perms'] ?? []); ?>
+          <label class="perm-item" style="margin-bottom:10px;border-color:var(--accent);background:rgba(26,107,66,.06);font-weight:700">
+            <input type="checkbox" id="chkControleTotal" onchange="toggleControleTotal(this.checked)"
+                   <?= $temTodas ? 'checked' : '' ?> />
+            <i class="fa fa-shield-halved" style="color:var(--accent)"></i> Controle Total
+          </label>
+          <div class="perms-grid" id="permsGrid">
             <?php foreach (PERMS_LIST as $key => $label): ?>
             <label class="perm-item">
-              <input type="checkbox" name="filiado_perms[]" value="<?= $key ?>"
+              <input type="checkbox" name="filiado_perms[]" value="<?= $key ?>" class="perm-cb"
                      <?= in_array($key, $editFiliado['perms'] ?? []) ? 'checked' : '' ?> />
               <?= htmlspecialchars($label) ?>
             </label>
@@ -1218,7 +1224,15 @@ $okMsg   = match($ok) {
             <td><?= htmlspecialchars($f['email'] ?? '-') ?></td>
             <td><?= htmlspecialchars($f['telefone'] ?? '-') ?></td>
             <td style="font-size:.78rem;color:var(--muted);max-width:220px">
-              <?= implode(', ', array_map(fn($p) => PERMS_LIST[$p] ?? $p, $f['perms'] ?? [])) ?: '—' ?>
+              <?php
+              $permsF = $f['perms'] ?? [];
+              $todasF = array_keys(PERMS_LIST);
+              if (!array_diff($todasF, $permsF)) {
+                  echo '<strong style="color:var(--accent)"><i class="fa fa-shield-halved"></i> Controle Total</strong>';
+              } else {
+                  echo implode(', ', array_map(fn($p) => PERMS_LIST[$p] ?? $p, $permsF)) ?: '—';
+              }
+              ?>
             </td>
             <td>
               <?php if (!empty($f['ativo'])): ?>
@@ -1260,6 +1274,20 @@ $okMsg   = match($ok) {
     document.querySelectorAll('.ltab').forEach(b => b.classList.remove('active'));
     if (btn) btn.classList.add('active');
   }
+
+  /* ── CONTROLE TOTAL FILIADOS ── */
+  function toggleControleTotal(checked) {
+    document.querySelectorAll('.perm-cb').forEach(cb => {
+      cb.checked = checked;
+      cb.closest('.perm-item').style.pointerEvents = checked ? 'none' : '';
+      cb.closest('.perm-item').style.opacity = checked ? '.6' : '';
+    });
+  }
+  /* aplica estado inicial ao carregar */
+  (function() {
+    const ct = document.getElementById('chkControleTotal');
+    if (ct && ct.checked) toggleControleTotal(true);
+  })();
 
   /* ── SELECIONAR TODAS AS IMAGENS ── */
   function toggleSelAll() {
