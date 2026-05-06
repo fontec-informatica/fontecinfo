@@ -431,6 +431,11 @@ if (file_exists($jsonFile)) {
     .yt-click-block {
       position: absolute; inset: 0; z-index: 3;
     }
+    .yt-overlay {
+      position: absolute; inset: 0; z-index: 4;
+      background: #000; transition: opacity .4s;
+    }
+    .yt-overlay.playing { opacity: 0; pointer-events: none; }
 
     /* MARCA D'ÁGUA NA GALERIA */
     .gallery-wm {
@@ -919,7 +924,7 @@ function resolveVideoEmbed(url) {
   if (url.includes('youtube.com') || url.includes('youtu.be')) {
     let src = url;
     const match = url.match(/(?:v=|youtu\.be\/)([a-zA-Z0-9_-]{11})/);
-    src = match ? `https://www.youtube.com/embed/${match[1]}?rel=0&modestbranding=1&fs=0&controls=0&autoplay=1&mute=1&enablejsapi=1&iv_load_policy=3&playsinline=1` : url;
+    src = match ? `https://www.youtube.com/embed/${match[1]}?rel=0&modestbranding=1&fs=0&controls=0&autoplay=1&mute=1&enablejsapi=1&iv_load_policy=3&playsinline=1&loop=1&playlist=${match[1]}` : url;
     return { type: 'iframe', src };
   }
 
@@ -1006,7 +1011,7 @@ function openModal(idx, goVideo = false) {
   } else {
     slidesEl.innerHTML = slides.map(s => {
       if (s.type === 'img')   return `<img class="gallery-slide" src="${s.src}" alt="" />`;
-      if (s.type === 'yt')    return `<div class="yt-player-wrap"><div class="yt-wrapper"><iframe id="ytPlayerFrame" class="gallery-slide video-slide" src="${s.src}" frameborder="0" allow="autoplay; encrypted-media" style="opacity:0;transition:opacity .4s"></iframe><div class="yt-click-block"></div></div><div class="video-prog-bar"><div class="video-prog-fill"></div></div></div>`;
+      if (s.type === 'yt')    return `<div class="yt-player-wrap"><div class="yt-wrapper"><iframe id="ytPlayerFrame" class="gallery-slide video-slide" src="${s.src}" frameborder="0" allow="autoplay; encrypted-media"></iframe><div class="yt-click-block"></div><div class="yt-overlay" id="ytOverlay"></div></div><div class="video-prog-bar"><div class="video-prog-fill"></div></div></div>`;
       if (s.type === 'video') return `<div class="video-player-wrap"><video class="gallery-slide" src="${s.src}" autoplay muted playsinline loop></video><div class="video-prog-bar"><div class="video-prog-fill"></div></div></div>`;
     }).join('');
     const vidEl = slidesEl.querySelector('video');
@@ -1119,14 +1124,16 @@ function createYTPlayer() {
   if (ytPlayer) { try { ytPlayer.destroy(); } catch(e) {} ytPlayer = null; }
   ytPlayer = new YT.Player('ytPlayerFrame', {
     events: {
-      onReady: e => {
-        e.target.playVideo();
-        const iframe = document.getElementById('ytPlayerFrame');
-        if (iframe) iframe.style.opacity = '1';
-      },
+      onReady: e => { e.target.playVideo(); },
       onStateChange: e => {
-        if (e.data === YT.PlayerState.PLAYING) startYTProgress();
-        else stopYTProgress();
+        const overlay = document.getElementById('ytOverlay');
+        if (e.data === YT.PlayerState.PLAYING) {
+          if (overlay) overlay.classList.add('playing');
+          startYTProgress();
+        } else {
+          if (overlay) overlay.classList.remove('playing');
+          stopYTProgress();
+        }
       }
     }
   });
