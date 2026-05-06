@@ -404,14 +404,18 @@ $okMsg   = match($ok) {
       overflow: visible;
     }
     .admin-brand { display: flex; align-items: center; gap: 4px; text-decoration: none; }
-    .admin-brand img { height: 234px; width: auto; object-fit: contain; mix-blend-mode: multiply; -webkit-user-drag: none; }
+    .admin-brand img {
+      height: 234px; width: auto; object-fit: contain;
+      mix-blend-mode: multiply; -webkit-user-drag: none; user-drag: none; pointer-events: none;
+    }
     [data-theme="dark"] .admin-brand img { mix-blend-mode: normal; filter: brightness(0) invert(1); }
-    .admin-brand-text { line-height: 1.2; }
-    .admin-brand-name { font-size: .78rem; color: var(--muted); letter-spacing: .04em; display: block; }
+    .admin-brand-text { display: flex; flex-direction: column; line-height: 1.2; }
+    .admin-brand-name { font-size: .75rem; color: var(--muted); letter-spacing: .04em; }
     .admin-brand-badge {
-      display: inline-block; font-size: .58rem; font-weight: 700; letter-spacing: .08em;
+      display: inline-block; font-size: .6rem; font-weight: 700; letter-spacing: .08em;
       background: var(--accent); color: #fff;
-      padding: 2px 8px; border-radius: 12px; text-transform: uppercase; margin-top: 4px;
+      padding: 2px 8px; border-radius: 20px; text-transform: uppercase;
+      margin-top: 4px; width: fit-content;
     }
     .header-right { display: flex; align-items: center; gap: 10px; }
     .btn-sm {
