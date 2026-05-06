@@ -444,12 +444,24 @@ $okMsg   = match($ok) {
       box-shadow: 0 20px 60px rgba(26,107,66,.12);
       text-align: center;
     }
-    .login-card img {
-      height: 140px; width: auto;
-      display: block; margin: 0 auto 24px;
-      mix-blend-mode: multiply;
+    .login-logo-wrap {
+      display: flex; align-items: center; justify-content: center; gap: 6px;
+      height: 70px; overflow: hidden; margin-bottom: 24px;
     }
-    [data-theme="dark"] .login-card img { mix-blend-mode: normal; filter: brightness(0) invert(1); }
+    .login-logo-wrap img {
+      height: 220px; width: auto; object-fit: contain;
+      mix-blend-mode: multiply; flex-shrink: 0;
+      -webkit-user-drag: none; pointer-events: none;
+    }
+    [data-theme="dark"] .login-logo-wrap img { mix-blend-mode: normal; filter: brightness(0) invert(1); }
+    .login-logo-text { display: flex; flex-direction: column; line-height: 1.2; text-align: left; }
+    .login-logo-sub  { font-size: .75rem; color: var(--muted); letter-spacing: .04em; }
+    .login-logo-badge {
+      display: inline-block; font-size: .6rem; font-weight: 700;
+      letter-spacing: .08em; text-transform: uppercase;
+      background: var(--accent); color: #fff;
+      padding: 2px 8px; border-radius: 20px; margin-top: 4px; width: fit-content;
+    }
     .login-card h2 {
       font-family: 'Syne', sans-serif; font-size: 1.4rem; font-weight: 800;
       margin-bottom: 6px;
@@ -757,7 +769,13 @@ $okMsg   = match($ok) {
 <!-- ════════════════ LOGIN ════════════════ -->
 <div class="login-wrap">
   <div class="login-card">
-    <img src="../assets/img/logo.png?v=2" alt="FONTEC" />
+    <div class="login-logo-wrap">
+      <img src="../assets/img/logo.png?v=2" alt="FONTEC" />
+      <div class="login-logo-text">
+        <span class="login-logo-sub">Empreendimentos</span>
+        <span class="login-logo-badge">Imóveis Rurais</span>
+      </div>
+    </div>
     <h2>Painel Administrativo</h2>
     <p>Fontec Empreendimentos — acesso restrito</p>
     <div class="login-tabs">
