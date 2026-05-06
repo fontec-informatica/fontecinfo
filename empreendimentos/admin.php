@@ -404,7 +404,7 @@ $okMsg   = match($ok) {
       overflow: visible;
     }
     .admin-brand { display: flex; align-items: center; gap: 4px; text-decoration: none; }
-    .admin-brand img { height: 200px; width: auto; object-fit: contain; mix-blend-mode: multiply; -webkit-user-drag: none; }
+    .admin-brand img { height: 234px; width: auto; object-fit: contain; mix-blend-mode: multiply; -webkit-user-drag: none; }
     [data-theme="dark"] .admin-brand img { mix-blend-mode: normal; filter: brightness(0) invert(1); }
     .admin-brand-text { line-height: 1.2; }
     .admin-brand-name { font-size: .78rem; color: var(--muted); letter-spacing: .04em; display: block; }
@@ -725,7 +725,7 @@ $okMsg   = match($ok) {
 
     @media (max-width: 768px) {
       .admin-header { padding: 0 4%; height: 64px; }
-      .admin-brand img { height: 100px; }
+      .admin-brand img { height: 188px; }
       .header-right .btn-sm span { display: none; }
       .form-grid { grid-template-columns: 1fr 1fr; }
       .upload-box { padding: 28px 20px; }
