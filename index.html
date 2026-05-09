@@ -688,6 +688,56 @@
       grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
       gap: 20px;
     }
+    /* B2B STRIP */
+    .b2b-strip {
+      background: var(--accent);
+      color: #fff;
+      padding: 64px 0;
+    }
+    .b2b-strip-inner {
+      max-width: 1100px; margin: 0 auto; padding: 0 5%;
+      display: flex; align-items: center; justify-content: space-between;
+      gap: 40px; flex-wrap: wrap;
+    }
+    .b2b-strip-text { flex: 1; min-width: 260px; }
+    .b2b-strip-label {
+      font-size: .72rem; font-weight: 700; letter-spacing: .12em;
+      text-transform: uppercase; opacity: .75; margin-bottom: 12px;
+    }
+    .b2b-strip-text h2 {
+      font-family: 'Syne', sans-serif; font-size: 2rem; font-weight: 800;
+      line-height: 1.15; margin-bottom: 14px;
+    }
+    .b2b-strip-text h2 em { font-style: italic; opacity: .85; }
+    .b2b-strip-text p { font-size: .95rem; line-height: 1.7; opacity: .88; max-width: 480px; }
+    .b2b-pills {
+      display: flex; flex-wrap: wrap; gap: 10px; margin-top: 24px;
+    }
+    .b2b-pills span {
+      background: rgba(255,255,255,.15);
+      border: 1px solid rgba(255,255,255,.3);
+      border-radius: 100px; padding: 6px 16px;
+      font-size: .8rem; font-weight: 500;
+    }
+    .b2b-strip-cta {
+      flex-shrink: 0;
+    }
+    .b2b-strip-cta a {
+      display: inline-flex; align-items: center; gap: 8px;
+      background: #fff; color: var(--accent);
+      font-weight: 700; font-size: .9rem;
+      padding: 14px 28px; border-radius: var(--radius-sm);
+      text-decoration: none;
+      transition: transform .2s, box-shadow .2s;
+      box-shadow: 0 4px 20px rgba(0,0,0,.15);
+    }
+    .b2b-strip-cta a:hover { transform: translateY(-2px); box-shadow: 0 8px 30px rgba(0,0,0,.2); }
+    @media (max-width: 768px) {
+      .b2b-strip-text h2 { font-size: 1.5rem; }
+      .b2b-strip-cta { width: 100%; }
+      .b2b-strip-cta a { width: 100%; justify-content: center; }
+    }
+
     .auto-card {
       background: var(--surface);
       border: 1px solid var(--border);
@@ -986,12 +1036,15 @@
   <section id="inicio" class="hero">
     <div class="hero-bg"></div>
     <div class="hero-content">
-      <div class="hero-badge hero-anim" style="animation-delay:.1s"><span></span> Anápolis · Goiânia · Região</div>
+      <div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:28px" class="hero-anim" style="animation-delay:.1s">
+        <div class="hero-badge" style="margin-bottom:0"><span></span> Anápolis · Goiânia · Região</div>
+        <div class="hero-badge" style="margin-bottom:0;font-weight:700"><span></span> Especialistas em B2B</div>
+      </div>
       <h1 class="hero-anim" style="animation-delay:.25s">
         Tecnologia que<br><em>transforma</em> seu negócio
       </h1>
       <p class="hero-anim" style="animation-delay:.4s">
-        Redes, servidores, segurança eletrônica, automação residencial e desenvolvimento web — tudo sob um mesmo teto.
+        Especialistas em atender empresas no mercado B2B — redes, servidores, segurança eletrônica, automação e desenvolvimento web, tudo sob um mesmo teto.
       </p>
       <div class="hero-ctas hero-anim" style="animation-delay:.55s">
         <a href="https://wa.me/message/AVL74KZZJTWMO1" class="btn-primary" target="_blank" rel="noopener">
@@ -1077,6 +1130,30 @@
     </div>
   </section>
 
+  <!-- B2B -->
+  <section class="b2b-strip">
+    <div class="b2b-strip-inner">
+      <div class="b2b-strip-text reveal">
+        <div class="b2b-strip-label">Para empresas</div>
+        <h2>Especialistas em<br><em>atendimento B2B</em></h2>
+        <p>Desenvolvemos soluções completas de tecnologia para empresas de todos os portes — com contratos corporativos, emissão de nota fiscal, suporte com SLA definido e atendimento dedicado.</p>
+        <div class="b2b-pills">
+          <span>Contratos corporativos</span>
+          <span>Emissão de NF</span>
+          <span>Suporte com SLA</span>
+          <span>Atendimento prioritário</span>
+          <span>Consultoria dedicada</span>
+        </div>
+      </div>
+      <div class="b2b-strip-cta reveal reveal-delay-2">
+        <a href="https://wa.me/message/AVL74KZZJTWMO1" target="_blank" rel="noopener">
+          Falar com especialista
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+        </a>
+      </div>
+    </div>
+  </section>
+
   <!-- FUNDADOR -->
   <section id="fundador">
     <div class="section-inner">
@@ -1105,6 +1182,7 @@
             <li>Certificado em segurança eletrônica</li>
             <li>Desenvolvedor web full-stack</li>
             <li>Consultor em automação residencial</li>
+            <li>Estrategista digital B2B</li>
           </ul>
           <div style="margin-top:28px" class="reveal reveal-delay-4">
             <a href="https://wa.me/message/AVL74KZZJTWMO1" class="btn-primary" target="_blank" rel="noopener">Fale comigo</a>
