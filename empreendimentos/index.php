@@ -24,9 +24,78 @@ if (file_exists($jsonFile)) {
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Fontec Empreendimentos | Fazendas e Imóveis Rurais em Goiás</title>
-  <meta name="description" content="Fontec Empreendimentos — fazendas, sítios e chácaras à venda em Goiás e região. Imóveis rurais selecionados com toda a infraestrutura." />
+  <title>Fontec Empreendimentos | Imóveis à Venda em Goiás — Rurais, Residenciais e Comerciais</title>
+  <meta name="description" content="Fontec Empreendimentos — fazendas, sítios, casas, apartamentos, lotes e imóveis comerciais à venda em Goiás e região. Propriedades verificadas, documentação em ordem e atendimento especializado." />
+  <meta name="keywords" content="imóveis à venda Goiás, fazendas à venda Goiás, sítios Goiânia, chácaras Anápolis, casas à venda Goiânia, apartamentos Goiânia, lotes à venda Goiás, imóveis rurais Goiás, terra rural Goiás, Fontec Empreendimentos, imóveis Anápolis, imóveis verificados Goiás, comprar imóvel Goiás" />
+  <meta name="author" content="Fontec Empreendimentos" />
+  <meta name="robots" content="index, follow" />
+  <meta name="theme-color" content="#1a6b42" />
+  <link rel="canonical" href="https://fontecinfo.com/empreendimentos/" />
+  <link rel="sitemap" type="application/xml" href="/sitemap.xml" />
+
+  <!-- Geo (SEO Local) -->
+  <meta name="geo.region" content="BR-GO" />
+  <meta name="geo.placename" content="Goiás, Brasil" />
+  <meta name="geo.position" content="-16.3289;-48.9531" />
+  <meta name="ICBM" content="-16.3289, -48.9531" />
+
+  <!-- Open Graph -->
+  <meta property="og:type" content="website" />
+  <meta property="og:locale" content="pt_BR" />
+  <meta property="og:site_name" content="Fontec Empreendimentos" />
+  <meta property="og:title" content="Fontec Empreendimentos | Imóveis à Venda em Goiás" />
+  <meta property="og:description" content="Fazendas, sítios, casas, apartamentos, lotes e imóveis comerciais à venda em Goiás. Propriedades verificadas com documentação em ordem." />
+  <meta property="og:url" content="https://fontecinfo.com/empreendimentos/" />
+  <meta property="og:image" content="https://fontecinfo.com/assets/img/logo.png" />
+  <meta property="og:image:width" content="500" />
+  <meta property="og:image:height" content="500" />
+  <meta property="og:image:alt" content="Fontec Empreendimentos — Imóveis em Goiás" />
+
+  <!-- Twitter Card -->
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content="Fontec Empreendimentos | Imóveis à Venda em Goiás" />
+  <meta name="twitter:description" content="Fazendas, casas, apartamentos, lotes e imóveis comerciais em Goiás. Propriedades verificadas com documentação em ordem." />
+  <meta name="twitter:image" content="https://fontecinfo.com/assets/img/logo.png" />
+
+  <!-- JSON-LD: RealEstateAgent -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "RealEstateAgent",
+    "name": "Fontec Empreendimentos",
+    "description": "Especialistas em imóveis rurais, residenciais e comerciais em Goiás. Fazendas, sítios, casas, apartamentos, lotes e imóveis comerciais verificados.",
+    "url": "https://fontecinfo.com/empreendimentos/",
+    "logo": "https://fontecinfo.com/assets/img/logo.png",
+    "image": "https://fontecinfo.com/assets/img/logo.png",
+    "telephone": "+55-62-99471-2382",
+    "priceRange": "$$",
+    "address": {
+      "@type": "PostalAddress",
+      "addressLocality": "Anápolis",
+      "addressRegion": "GO",
+      "addressCountry": "BR"
+    },
+    "geo": {
+      "@type": "GeoCoordinates",
+      "latitude": -16.3289,
+      "longitude": -48.9531
+    },
+    "areaServed": [
+      { "@type": "State", "name": "Goiás" },
+      { "@type": "City", "name": "Anápolis" },
+      { "@type": "City", "name": "Goiânia" },
+      { "@type": "AdministrativeArea", "name": "Distrito Federal" }
+    ],
+    "parentOrganization": {
+      "@type": "Organization",
+      "name": "FONTEC Informática & Tecnologia",
+      "url": "https://fontecinfo.com"
+    }
+  }
+  </script>
+
   <link rel="icon" type="image/x-icon" href="../assets/img/favicon.ico" />
+  <link rel="apple-touch-icon" href="../assets/img/apple-touch-icon.png" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet" />
@@ -631,7 +700,7 @@ if (file_exists($jsonFile)) {
     <img src="../assets/img/logo.png?v=2" alt="Fontec Empreendimentos" />
     <div class="logo-text">
       <span class="logo-sub">Empreendimentos</span>
-      <span class="logo-badge">Imóveis Rurais</span>
+      <span class="logo-badge">Imóveis</span>
     </div>
   </a>
   <div class="header-right">
@@ -645,9 +714,9 @@ if (file_exists($jsonFile)) {
 <!-- HERO -->
 <section class="hero">
   <div class="hero-content">
-    <div class="hero-tag"><i class="fa fa-leaf"></i> Imóveis Rurais</div>
-    <h1>Fazendas &amp; Propriedades<br><span>à Venda em Goiás</span></h1>
-    <p>Selecione o imóvel rural ideal para seu investimento ou moradia. Propriedades verificadas com toda a documentação em ordem.</p>
+    <div class="hero-tag"><i class="fa fa-home"></i> Imóveis em Goiás</div>
+    <h1>Imóveis à Venda<br><span>em Goiás e Região</span></h1>
+    <p>Rurais, residenciais e comerciais — encontre o imóvel ideal para seu investimento. Propriedades verificadas com toda a documentação em ordem.</p>
     <div class="hero-stats">
       <div class="hero-stat">
         <strong><?= count($fazendas) ?></strong>
@@ -670,8 +739,12 @@ if (file_exists($jsonFile)) {
   <button class="filter-btn active" data-filter="todos"><i class="fa fa-th-large"></i> Todos</button>
   <button class="filter-btn" data-filter="fazenda"><i class="fa fa-tractor"></i> Fazenda</button>
   <button class="filter-btn" data-filter="sitio"><i class="fa fa-tree"></i> Sítio</button>
-  <button class="filter-btn" data-filter="chacara"><i class="fa fa-home"></i> Chácara</button>
-  <button class="filter-btn" data-filter="terra"><i class="fa fa-seedling"></i> Terra Nua</button>
+  <button class="filter-btn" data-filter="chacara"><i class="fa fa-leaf"></i> Chácara</button>
+  <button class="filter-btn" data-filter="terra nua"><i class="fa fa-seedling"></i> Terra Nua</button>
+  <button class="filter-btn" data-filter="casa"><i class="fa fa-house"></i> Casa</button>
+  <button class="filter-btn" data-filter="apartamento"><i class="fa fa-building"></i> Apartamento</button>
+  <button class="filter-btn" data-filter="lote"><i class="fa fa-draw-polygon"></i> Lote</button>
+  <button class="filter-btn" data-filter="comercial"><i class="fa fa-store"></i> Comercial</button>
 </div>
 
 <!-- GRID -->
@@ -688,27 +761,29 @@ if (file_exists($jsonFile)) {
   <div class="footer-grid">
     <div class="footer-brand">
       <div style="display:flex;align-items:center;gap:4px;margin-bottom:12px;">
-        <img src="../assets/img/logo.png?v=2" alt="Fontec Empreendimentos" />
+        <img src="../assets/img/logo.png?v=2" alt="Fontec Empreendimentos — Imóveis em Goiás" />
         <div class="logo-text">
           <span class="logo-sub">Empreendimentos</span>
-          <span class="logo-badge">Imóveis Rurais</span>
+          <span class="logo-badge">Imóveis</span>
         </div>
       </div>
-      <p>Fontec Empreendimentos — imóveis rurais selecionados em Goiás e região. Propriedades verificadas, documentação em ordem.</p>
+      <p>Fontec Empreendimentos — rurais, residenciais e comerciais em Goiás e região. Propriedades verificadas com documentação em ordem.</p>
     </div>
     <div class="footer-col">
       <h4>Navegação</h4>
       <ul>
         <li><a href="#">Início</a></li>
         <li><a href="#" onclick="document.querySelector('.filter-btn[data-filter=fazenda]').click();return false;">Fazendas</a></li>
-        <li><a href="#" onclick="document.querySelector('.filter-btn[data-filter=sitio]').click();return false;">Sítios</a></li>
-        <li><a href="#" onclick="document.querySelector('.filter-btn[data-filter=chacara]').click();return false;">Chácaras</a></li>
+        <li><a href="#" onclick="document.querySelector('.filter-btn[data-filter=casa]').click();return false;">Casas</a></li>
+        <li><a href="#" onclick="document.querySelector('.filter-btn[data-filter=apartamento]').click();return false;">Apartamentos</a></li>
+        <li><a href="#" onclick="document.querySelector('.filter-btn[data-filter=lote]').click();return false;">Lotes</a></li>
+        <li><a href="#" onclick="document.querySelector('.filter-btn[data-filter=comercial]').click();return false;">Comercial</a></li>
       </ul>
     </div>
     <div class="footer-col">
       <h4>Contato</h4>
       <ul>
-        <li><a href="https://wa.me/5562994712382?text=Ol%C3%A1%2C+tenho+interesse+em+um+im%C3%B3vel+rural.+Poderia+me+passar+mais+informa%C3%A7%C3%B5es%3F" target="_blank" rel="noopener">WhatsApp</a></li>
+        <li><a href="https://wa.me/5562994712382?text=Ol%C3%A1%2C+tenho+interesse+em+um+im%C3%B3vel.+Poderia+me+passar+mais+informa%C3%A7%C3%B5es%3F" target="_blank" rel="noopener">WhatsApp</a></li>
         <li><span>Anápolis · GO</span></li>
       </ul>
     </div>
@@ -729,7 +804,7 @@ if (file_exists($jsonFile)) {
 </button>
 
 <!-- WHATSAPP FLOAT -->
-<a href="https://wa.me/5562994712382?text=Ol%C3%A1%2C+tenho+interesse+em+um+im%C3%B3vel+rural.+Poderia+me+passar+mais+informa%C3%A7%C3%B5es%3F" class="whatsapp-float" target="_blank" rel="noopener" aria-label="WhatsApp">
+<a href="https://wa.me/5562994712382?text=Ol%C3%A1%2C+tenho+interesse+em+um+im%C3%B3vel.+Poderia+me+passar+mais+informa%C3%A7%C3%B5es%3F" class="whatsapp-float" target="_blank" rel="noopener" aria-label="WhatsApp">
   <svg viewBox="0 0 24 24" fill="#fff"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
 </a>
 
@@ -896,12 +971,19 @@ function renderCards(list) {
 renderCards(fazendas);
 
 /* ── FILTROS ── */
+function normStr(s) {
+  return (s||'').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '');
+}
 document.querySelectorAll('.filter-btn').forEach(btn => {
   btn.addEventListener('click', () => {
     document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
     btn.classList.add('active');
     const f = btn.dataset.filter;
-    const filtered = f === 'todos' ? fazendas : fazendas.filter(x => (x.tipo||'').toLowerCase().includes(f));
+    const filtered = f === 'todos'
+      ? fazendas
+      : f === 'comercial'
+        ? fazendas.filter(x => ['sala comercial','ponto comercial','galpão','galpao'].some(t => normStr(x.tipo||'').includes(normStr(t))))
+        : fazendas.filter(x => normStr(x.tipo||'').includes(normStr(f)));
     renderCards(filtered);
   });
 });

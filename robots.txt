@@ -1,0 +1,7 @@
+User-agent: *
+Allow: /
+Disallow: /empreendimentos/admin.php
+Disallow: /empreendimentos/data/
+Disallow: /empreendimentos/uploads/
+
+Sitemap: https://fontecinfo.com/sitemap.xml
