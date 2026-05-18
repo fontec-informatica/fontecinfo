@@ -3,10 +3,15 @@
 class Mailer {
 
     public function send(string $to, string $subj, string $html): bool {
+        /* ── Modo sendmail: usa PHP mail() via binário local ── */
+        if (SMTP_HOST === 'sendmail') {
+            return $this->viaMail($to, $subj, $html);
+        }
+
+        /* ── Modo SMTP: conexão direta ── */
         $port    = (int) SMTP_PORT;
         $isLocal = in_array(SMTP_HOST, ['localhost', '127.0.0.1']);
 
-        /* ── Conexão ── */
         if ($isLocal) {
             $sock = @fsockopen(SMTP_HOST, $port, $errno, $errstr, 10);
         } else {
@@ -22,11 +27,11 @@ class Mailer {
 
         if (!$sock) {
             $this->log("ERRO conexão " . SMTP_HOST . ":{$port} — [{$errno}] {$errstr}");
-            return false;
+            $this->log("Tentando fallback via mail()...");
+            return $this->viaMail($to, $subj, $html);
         }
         stream_set_timeout($sock, 15);
 
-        /* ── Handshake ── */
         $greeting = $this->rd($sock);
         $this->log("S: " . trim($greeting));
 
@@ -36,7 +41,7 @@ class Mailer {
             if (strpos($r, '220') === false) {
                 $this->log("STARTTLS falhou: " . trim($r));
                 @fclose($sock);
-                return false;
+                return $this->viaMail($to, $subj, $html);
             }
             stream_socket_enable_crypto($sock, true, STREAM_CRYPTO_METHOD_TLS_CLIENT);
         }
@@ -44,17 +49,14 @@ class Mailer {
         $ehlo = $this->cmd($sock, 'EHLO ' . SMTP_HOST);
         $this->log("EHLO: " . trim($ehlo));
 
-        /* ── Autenticação — apenas para servidores remotos ── */
         if (!$isLocal) {
             $authenticated = false;
 
-            /* Tenta AUTH PLAIN */
             $plain = base64_encode("\0" . SMTP_USER . "\0" . SMTP_PASS);
             $auth  = $this->cmd($sock, "AUTH PLAIN {$plain}");
             $this->log("AUTH PLAIN: " . trim($auth));
             if (strpos($auth, '235') !== false) $authenticated = true;
 
-            /* Tenta AUTH LOGIN como fallback */
             if (!$authenticated) {
                 $this->cmd($sock, 'AUTH LOGIN');
                 $this->cmd($sock, base64_encode(SMTP_USER));
@@ -64,23 +66,17 @@ class Mailer {
             }
 
             if (!$authenticated) {
-                $this->log("ERRO autenticação falhou em ambos os métodos");
+                $this->log("ERRO autenticação falhou — tentando fallback via mail()");
                 @fclose($sock);
-                return false;
+                return $this->viaMail($to, $subj, $html);
             }
         } else {
             $this->log("Relay local — autenticação ignorada");
         }
 
-        /* ── Envio ── */
-        $r = $this->cmd($sock, 'MAIL FROM:<' . SMTP_FROM . '>');
-        $this->log("MAIL FROM: " . trim($r));
-
-        $r = $this->cmd($sock, "RCPT TO:<{$to}>");
-        $this->log("RCPT TO: " . trim($r));
-
-        $r = $this->cmd($sock, 'DATA');
-        $this->log("DATA: " . trim($r));
+        $this->cmd($sock, 'MAIL FROM:<' . SMTP_FROM . '>');
+        $this->cmd($sock, "RCPT TO:<{$to}>");
+        $this->cmd($sock, 'DATA');
 
         $msg  = 'Date: ' . date('r') . "\r\n";
         $msg .= 'From: =?UTF-8?B?' . base64_encode(SMTP_FROM_NAME) . '?= <' . SMTP_FROM . ">\r\n";
@@ -98,7 +94,25 @@ class Mailer {
         @fclose($sock);
 
         $ok = strpos($resp, '250') !== false;
-        $this->log($ok ? "OK — enviado para {$to}" : "FALHA ao enviar para {$to}");
+        $this->log($ok ? "OK — enviado para {$to}" : "FALHA SMTP ao enviar para {$to}");
+        return $ok;
+    }
+
+    /* ── Envio via PHP mail() (sendmail binary) ── */
+    private function viaMail(string $to, string $subj, string $html): bool {
+        $headers  = "MIME-Version: 1.0\r\n";
+        $headers .= "Content-Type: text/html; charset=UTF-8\r\n";
+        $headers .= "From: " . SMTP_FROM_NAME . " <" . SMTP_FROM . ">\r\n";
+        $headers .= "Reply-To: " . SMTP_FROM . "\r\n";
+        $headers .= "X-Mailer: FONTEC-Chamados/1.0\r\n";
+
+        $encodedSubj = '=?UTF-8?B?' . base64_encode($subj) . '?=';
+        $ok = mail($to, $encodedSubj, $html, $headers, '-f ' . SMTP_FROM);
+
+        $this->log($ok
+            ? "mail() OK — enviado para {$to}"
+            : "mail() FALHA ao enviar para {$to} (verifique sendmail_path no php.ini)"
+        );
         return $ok;
     }
 
