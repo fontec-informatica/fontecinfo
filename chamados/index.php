@@ -1,8 +1,7 @@
 <?php
 session_start();
 
-require_once __DIR__ . '/config_mail.php';
-require_once __DIR__ . '/mailer.php';
+require_once __DIR__ . '/config.php';
 
 /* ── CONFIG ── */
 define('CHAMADOS_FILE', __DIR__ . '/data/chamados.json');
@@ -49,27 +48,6 @@ function nextId(array $list, string $pfx, int $pad = 4): string {
         if (preg_match('/'.preg_quote($pfx).'-(\d+)/', $x['id'] ?? '', $m)) $max = max($max, (int)$m[1]);
     }
     return $pfx . '-' . str_pad($max + 1, $pad, '0', STR_PAD_LEFT);
-}
-function mailSend(string $to, string $subj, string $html): void {
-    (new Mailer())->send($to, $subj, $html);
-}
-function mailTpl(string $title, string $body): string {
-    return "<!DOCTYPE html><html><head><meta charset='UTF-8'><style>
-    *{box-sizing:border-box}body{font-family:Arial,sans-serif;background:#f3f4f6;margin:0;padding:20px}
-    .w{max-width:560px;margin:0 auto;background:#fff;border-radius:10px;overflow:hidden;box-shadow:0 2px 10px rgba(0,0,0,.1)}
-    .hd{background:#1e3a5f;padding:20px 26px}.hd h1{color:#fff;margin:0;font-size:17px;font-weight:700}
-    .bd{padding:22px 26px;color:#374151;font-size:14px;line-height:1.7}
-    table{width:100%;border-collapse:collapse;margin:12px 0}
-    td{padding:8px 12px;border:1px solid #e5e7eb;font-size:13px}
-    td:first-child{background:#f9fafb;font-weight:600;width:120px}
-    .bx{background:#f9fafb;border:1px solid #e5e7eb;border-radius:6px;padding:14px;margin:12px 0;white-space:pre-wrap;font-size:13px}
-    .btn{display:inline-block;background:#1e3a5f;color:#fff!important;padding:10px 20px;border-radius:6px;text-decoration:none;font-size:13px;margin-top:12px}
-    .ft{background:#f9fafb;padding:12px 26px;text-align:center;font-size:11px;color:#9ca3af;border-top:1px solid #e5e7eb}
-    </style></head><body><div class='w'>
-    <div class='hd'><h1>FONTEC &mdash; {$title}</h1></div>
-    <div class='bd'>{$body}</div>
-    <div class='ft'>FONTEC Informática &amp; Tecnologia &bull; Anápolis, GO &bull; fontecinfo.com</div>
-    </div></body></html>";
 }
 function stBadge(string $st): string {
     global $ST;
@@ -154,19 +132,7 @@ if ($auth) {
                     'anexos' => $anexos, 'created_at' => $now, 'updated_at' => $now, 'mensagens' => [],
                 ];
                 wj(CHAMADOS_FILE, $all);
-                $mb = mailTpl("Novo Chamado [{$id}]",
-                    "<p>Novo chamado aberto por <strong>" . h($emp['nome']) . "</strong>.</p>
-                    <table>
-                      <tr><td>ID</td><td><strong>{$id}</strong></td></tr>
-                      <tr><td>Empresa</td><td>" . h($emp['nome']) . "</td></tr>
-                      <tr><td>Contato</td><td>" . h($emp['contato']) . "</td></tr>
-                      <tr><td>Categoria</td><td>{$cat}</td></tr>
-                      <tr><td>Prioridade</td><td>{$prio}</td></tr>
-                    </table>
-                    <p><strong>Descrição:</strong></p>
-                    <div class='bx'>" . nl2br(h($desc)) . "</div>
-                    <a class='btn' href='" . SITE_URL . "/admin.php?page=chamado&amp;id={$id}'>Abrir no Painel Admin</a>");
-                mailSend(ADMIN_EMAIL, "Novo Chamado [{$id}] — " . $emp['nome'], $mb);
+                sendWhatsApp("*Novo Chamado [{$id}]*\nEmpresa: {$emp['nome']}\nContato: {$emp['contato']}\nCategoria: {$cat} | Prioridade: {$prio}\nTitulo: {$titulo}\nAcesse: fontecinfo.com/chamados/admin.php");
                 header("Location: index.php?page=chamado&id={$id}&ok=1");
                 exit;
             }
@@ -186,12 +152,7 @@ if ($auth) {
                     $c['mensagens'][] = ['tipo' => 'empresa', 'autor' => $emp['contato'] ?: $emp['nome'], 'msg' => $msg, 'at' => date('Y-m-d H:i:s')];
                     if ($c['status'] === 'aguardando') $c['status'] = 'em_andamento';
                     $c['updated_at'] = date('Y-m-d H:i:s');
-                    $mb = mailTpl("Resposta em [{$cid}]",
-                        "<p><strong>" . h($emp['nome']) . "</strong> respondeu ao chamado <strong>{$cid}</strong>.</p>
-                        <p><strong>Título:</strong> " . h($c['titulo']) . "</p>
-                        <div class='bx'>" . nl2br(h($msg)) . "</div>
-                        <a class='btn' href='" . SITE_URL . "/admin.php?page=chamado&amp;id={$cid}'>Ver no Painel Admin</a>");
-                    mailSend(ADMIN_EMAIL, "Resposta em [{$cid}] — " . $emp['nome'], $mb);
+                    sendWhatsApp("*Resposta em [{$cid}]*\nEmpresa: {$emp['nome']}\nChamado: {$c['titulo']}\nMsg: " . mb_substr($msg, 0, 120));
                     break;
                 }
             }

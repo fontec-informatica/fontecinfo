@@ -1,8 +1,7 @@
 <?php
 session_start();
 
-require_once __DIR__ . '/config_mail.php';
-require_once __DIR__ . '/mailer.php';
+require_once __DIR__ . '/config.php';
 
 /* ── CONFIG ── */
 define('CHAMADOS_FILE', __DIR__ . '/data/chamados.json');
@@ -37,27 +36,6 @@ function wj(string $f, array $d): void {
     file_put_contents($f, json_encode(array_values($d), JSON_UNESCAPED_UNICODE|JSON_UNESCAPED_SLASHES|JSON_PRETTY_PRINT), LOCK_EX);
 }
 function newEmpId(): string { return 'emp_' . uniqid(); }
-function mailSend(string $to, string $subj, string $html): void {
-    (new Mailer())->send($to, $subj, $html);
-}
-function mailTpl(string $title, string $body): string {
-    return "<!DOCTYPE html><html><head><meta charset='UTF-8'><style>
-    *{box-sizing:border-box}body{font-family:Arial,sans-serif;background:#f3f4f6;margin:0;padding:20px}
-    .w{max-width:560px;margin:0 auto;background:#fff;border-radius:10px;overflow:hidden;box-shadow:0 2px 10px rgba(0,0,0,.1)}
-    .hd{background:#1e3a5f;padding:20px 26px}.hd h1{color:#fff;margin:0;font-size:17px;font-weight:700}
-    .bd{padding:22px 26px;color:#374151;font-size:14px;line-height:1.7}
-    table{width:100%;border-collapse:collapse;margin:12px 0}
-    td{padding:8px 12px;border:1px solid #e5e7eb;font-size:13px}
-    td:first-child{background:#f9fafb;font-weight:600;width:120px}
-    .bx{background:#f9fafb;border:1px solid #e5e7eb;border-radius:6px;padding:14px;margin:12px 0;white-space:pre-wrap;font-size:13px}
-    .btn{display:inline-block;background:#1e3a5f;color:#fff!important;padding:10px 20px;border-radius:6px;text-decoration:none;font-size:13px;margin-top:12px}
-    .ft{background:#f9fafb;padding:12px 26px;text-align:center;font-size:11px;color:#9ca3af;border-top:1px solid #e5e7eb}
-    </style></head><body><div class='w'>
-    <div class='hd'><h1>FONTEC &mdash; {$title}</h1></div>
-    <div class='bd'>{$body}</div>
-    <div class='ft'>FONTEC Informática &amp; Tecnologia &bull; Anápolis, GO &bull; fontecinfo.com</div>
-    </div></body></html>";
-}
 function stBadge(string $st): string {
     global $ST;
     $x = $ST[$st] ?? ['label' => h($st), 'c' => '#374151', 'bg' => '#f3f4f6'];
@@ -94,28 +72,24 @@ $auth = !empty($_SESSION['chm_admin']);
 
 /* ── AÇÕES ── */
 $flash = $flashType = '';
-$testResult = '';
 if ($auth) {
 
-    /* LIMPAR LOG */
-    if (isset($_GET['clear_log'])) {
-        file_put_contents(__DIR__ . '/data/mail.log', '');
-        header('Location: admin.php?page=email_test');
+    /* LIMPAR WA LOG */
+    if (isset($_GET['clear_wa_log'])) {
+        file_put_contents(__DIR__ . '/data/wa.log', '');
+        header('Location: admin.php?page=wa_test');
         exit;
     }
 
-    /* TESTE DE E-MAIL */
-    if (($_POST['action'] ?? '') === 'test_email' && $_SERVER['REQUEST_METHOD'] === 'POST') {
+    /* TESTE WHATSAPP */
+    if (($_POST['action'] ?? '') === 'test_wa' && $_SERVER['REQUEST_METHOD'] === 'POST') {
         checkCsrf();
-        $destTeste = trim($_POST['dest_teste'] ?? ADMIN_EMAIL);
-        $ok = (new Mailer())->send(
-            $destTeste,
-            'Teste SMTP — FONTEC Chamados',
-            mailTpl('Teste de E-mail', "<p>Este é um e-mail de teste enviado pelo painel admin do sistema de chamados FONTEC.</p><p><strong>Se chegou aqui, o SMTP está funcionando corretamente.</strong></p><p>Hora: " . date('d/m/Y H:i:s') . "</p>")
-        );
-        $testResult = $ok ? 'ok' : 'err';
-        $flash     = $ok ? "E-mail de teste enviado para {$destTeste}. Verifique a caixa de entrada." : 'Falha ao enviar. Verifique as credenciais em config_mail.php e o arquivo data/mail.log.';
-        $flashType = $ok ? 'ok' : 'err';
+        if (WA_APIKEY === 'APIKEY_AQUI') {
+            $flash = 'Configure a APIKEY em config.php antes de testar.'; $flashType = 'err';
+        } else {
+            sendWhatsApp('Teste FONTEC Chamados — ' . date('d/m/Y H:i:s') . ' — Sistema funcionando!');
+            $flash = 'Mensagem de teste enviada! Verifique o WhatsApp em ' . WA_PHONE . '.'; $flashType = 'ok';
+        }
     }
 
     /* RESPONDER */
@@ -132,23 +106,6 @@ if ($auth) {
                     $c['mensagens'][] = ['tipo' => 'admin', 'autor' => 'FONTEC Suporte', 'msg' => $msg, 'at' => date('Y-m-d H:i:s')];
                     if (!in_array($c['status'], ['resolvido', 'fechado'])) $c['status'] = 'aguardando';
                     $c['updated_at'] = date('Y-m-d H:i:s');
-                    /* notifica empresa */
-                    $empresas = lj(EMPRESAS_FILE);
-                    foreach ($empresas as $e) {
-                        if ($e['id'] === $c['empresa_id'] && !empty($e['email'])) {
-                            $mb = mailTpl("Atualização no Chamado [{$cid}]",
-                                "<p>Sua solicitação foi respondida pela equipe FONTEC.</p>
-                                <table>
-                                  <tr><td>Chamado</td><td><strong>{$cid}</strong></td></tr>
-                                  <tr><td>Título</td><td>" . h($c['titulo']) . "</td></tr>
-                                </table>
-                                <p><strong>Resposta da FONTEC:</strong></p>
-                                <div class='bx'>" . nl2br(h($msg)) . "</div>
-                                <a class='btn' href='" . SITE_URL . "/index.php?page=chamado&amp;id={$cid}'>Ver no Portal</a>");
-                            mailSend($e['email'], "FONTEC — Resposta no Chamado [{$cid}]", $mb);
-                            break;
-                        }
-                    }
                     break;
                 }
             }
@@ -169,24 +126,6 @@ if ($auth) {
                 if ($c['id'] === $cid) {
                     $c['status']     = $newStatus;
                     $c['updated_at'] = date('Y-m-d H:i:s');
-                    /* notifica empresa se resolvido */
-                    if ($newStatus === 'resolvido') {
-                        $empresas = lj(EMPRESAS_FILE);
-                        foreach ($empresas as $e) {
-                            if ($e['id'] === $c['empresa_id'] && !empty($e['email'])) {
-                                $mb = mailTpl("Chamado [{$cid}] Resolvido",
-                                    "<p>Seu chamado foi marcado como <strong>Resolvido</strong> pela equipe FONTEC.</p>
-                                    <table>
-                                      <tr><td>Chamado</td><td><strong>{$cid}</strong></td></tr>
-                                      <tr><td>Título</td><td>" . h($c['titulo']) . "</td></tr>
-                                    </table>
-                                    <p>Se o problema persistir, acesse o portal e abra um novo chamado.</p>
-                                    <a class='btn' href='" . SITE_URL . "/index.php?page=chamado&amp;id={$cid}'>Acessar Portal</a>");
-                                mailSend($e['email'], "FONTEC — Chamado [{$cid}] Resolvido", $mb);
-                                break;
-                            }
-                        }
-                    }
                     break;
                 }
             }
@@ -544,8 +483,8 @@ table.data tr:hover td{background:#f8fafc}
     <a href="admin.php?page=empresas" class="nav-item <?= in_array($page,['empresas','empresa_form'])?'active':'' ?>">
       <i class="fa fa-building"></i> Empresas
     </a>
-    <a href="admin.php?page=email_test" class="nav-item <?= $page==='email_test'?'active':'' ?>">
-      <i class="fa fa-envelope-circle-check"></i> Teste de E-mail
+    <a href="admin.php?page=wa_test" class="nav-item <?= $page==='wa_test'?'active':'' ?>">
+      <i class="fa-brands fa-whatsapp"></i> WhatsApp
     </a>
     <a href="index.php" target="_blank" class="nav-item">
       <i class="fa fa-arrow-up-right-from-square"></i> Portal Cliente
@@ -815,7 +754,6 @@ elseif ($page === 'chamado' && $cur): ?>
           <textarea name="msg" required placeholder="Escreva a resposta para a empresa..."></textarea>
           <div class="form-actions">
             <button type="submit" class="btn-send"><i class="fa fa-paper-plane"></i> Enviar Resposta</button>
-            <small style="color:var(--muted)">A empresa receberá um e-mail com sua resposta.</small>
           </div>
         </form>
       </div>
@@ -968,44 +906,50 @@ elseif ($page === 'empresa_form'): ?>
     </div>
   </div>
 
-<?php /* ── TESTE E-MAIL ── */
-elseif ($page === 'email_test'): ?>
+<?php /* ── WHATSAPP TEST ── */
+elseif ($page === 'wa_test'): ?>
   <div class="page-header">
     <div class="page-header-left">
-      <h1>Teste de E-mail SMTP</h1>
-      <p>Envie um e-mail de teste para verificar se as configurações estão corretas.</p>
+      <h1>Notificações WhatsApp</h1>
+      <p>Configure e teste o envio de notificações via CallMeBot.</p>
     </div>
   </div>
   <div style="max-width:580px">
     <div class="card" style="margin-bottom:20px">
       <div class="card-header"><h2><i class="fa fa-gear" style="margin-right:6px;opacity:.7"></i> Configuração Atual</h2></div>
       <div class="card-body" style="padding:12px 20px">
-        <div class="info-row"><span class="lbl">Host SMTP</span><span class="val" style="font-family:monospace"><?= h(SMTP_HOST) ?></span></div>
-        <div class="info-row"><span class="lbl">Porta</span><span class="val"><?= h((string)SMTP_PORT) ?> <?= SMTP_PORT===465?'(SSL)':'(TLS/STARTTLS)' ?></span></div>
-        <div class="info-row"><span class="lbl">Usuário</span><span class="val" style="font-family:monospace"><?= h(SMTP_USER) ?></span></div>
-        <div class="info-row"><span class="lbl">Remetente</span><span class="val" style="font-family:monospace"><?= h(SMTP_FROM) ?></span></div>
-        <div class="info-row"><span class="lbl">Senha</span><span class="val"><?= SMTP_PASS === 'SENHA_DO_EMAIL_AQUI' ? '<span style="color:#dc2626;font-weight:700">⚠ Não configurada</span>' : '<span style="color:#059669">● Configurada</span>' ?></span></div>
+        <div class="info-row"><span class="lbl">Telefone</span><span class="val" style="font-family:monospace"><?= h(WA_PHONE) ?></span></div>
+        <div class="info-row"><span class="lbl">API Key</span><span class="val"><?= WA_APIKEY === 'APIKEY_AQUI' ? '<span style="color:#dc2626;font-weight:700">Não configurada</span>' : '<span style="color:#059669">Configurada</span>' ?></span></div>
       </div>
     </div>
-    <?php if (SMTP_PASS === 'SENHA_DO_EMAIL_AQUI'): ?>
+    <?php if (WA_APIKEY === 'APIKEY_AQUI'): ?>
     <div class="alert-err" style="margin-bottom:20px">
-      <i class="fa fa-triangle-exclamation"></i>
-      <strong>Senha não configurada.</strong> Edite o arquivo <code>chamados/config_mail.php</code> no servidor e substitua
-      <code>SENHA_DO_EMAIL_AQUI</code> pela senha real do e-mail <strong><?= h(SMTP_USER) ?></strong>.
+      <strong>CallMeBot não configurado.</strong> Siga os passos abaixo e edite <code>chamados/config.php</code> no servidor.
+    </div>
+    <div class="card" style="margin-bottom:20px">
+      <div class="card-header"><h2>Como ativar o CallMeBot</h2></div>
+      <div class="card-body">
+        <ol style="font-size:14px;line-height:2;padding-left:18px">
+          <li>Adicione o número <strong>+34 644 33 89 81</strong> na agenda do celular como "CallMeBot".</li>
+          <li>Mande a mensagem exata no WhatsApp: <code style="background:#f1f5f9;padding:2px 6px;border-radius:4px">I allow callmebot to send me messages</code></li>
+          <li>Você receberá uma mensagem com sua <strong>apikey</strong>.</li>
+          <li>No servidor, edite <code>chamados/config.php</code> e preencha <code>WA_PHONE</code> (ex: +5562999998888) e <code>WA_APIKEY</code>.</li>
+        </ol>
+      </div>
     </div>
     <?php endif ?>
-    <?php if (file_exists(__DIR__ . '/data/mail.log')): ?>
+    <?php if (file_exists(__DIR__ . '/data/wa.log')): ?>
     <div class="card" style="margin-bottom:20px">
       <div class="card-header">
-        <h2><i class="fa fa-file-lines" style="margin-right:6px;opacity:.7"></i> Log de E-mails (últimas 30 linhas)</h2>
-        <a href="admin.php?page=email_test&clear_log=1" class="btn-danger" style="font-size:12px;padding:5px 10px"
-           onclick="return confirm('Limpar o log de e-mails?')">
+        <h2><i class="fa fa-file-lines" style="margin-right:6px;opacity:.7"></i> Log WhatsApp (últimas 30 linhas)</h2>
+        <a href="admin.php?page=wa_test&clear_wa_log=1" class="btn-danger" style="font-size:12px;padding:5px 10px"
+           onclick="return confirm('Limpar o log de WhatsApp?')">
           <i class="fa fa-trash"></i> Limpar
         </a>
       </div>
       <div class="card-body">
         <pre style="background:#0f172a;color:#e2e8f0;padding:14px;border-radius:8px;font-size:12px;overflow-x:auto;white-space:pre-wrap;max-height:300px;overflow-y:auto"><?php
-          $logLines = file(__DIR__ . '/data/mail.log');
+          $logLines = file(__DIR__ . '/data/wa.log');
           $last30   = array_slice($logLines, -30);
           echo h(implode('', $last30));
         ?></pre>
@@ -1013,17 +957,16 @@ elseif ($page === 'email_test'): ?>
     </div>
     <?php endif ?>
     <div class="card">
-      <div class="card-header"><h2><i class="fa fa-paper-plane" style="margin-right:6px;opacity:.7"></i> Enviar E-mail de Teste</h2></div>
+      <div class="card-header"><h2><i class="fa-brands fa-whatsapp" style="margin-right:6px;opacity:.7"></i> Enviar Mensagem de Teste</h2></div>
       <div class="card-body">
         <form method="post">
           <input type="hidden" name="csrf"   value="<?= h($csrf) ?>">
-          <input type="hidden" name="action" value="test_email">
-          <div class="form-group">
-            <label>Enviar para</label>
-            <input type="email" name="dest_teste" value="<?= h(ADMIN_EMAIL) ?>" required>
-          </div>
+          <input type="hidden" name="action" value="test_wa">
+          <p style="font-size:14px;color:var(--muted);margin-bottom:16px">
+            Envia uma mensagem de teste para <strong><?= h(WA_PHONE) ?></strong> via CallMeBot.
+          </p>
           <div class="form-actions">
-            <button type="submit" class="btn-send"><i class="fa fa-envelope"></i> Enviar Teste</button>
+            <button type="submit" class="btn-send"><i class="fa-brands fa-whatsapp"></i> Enviar Teste</button>
           </div>
         </form>
       </div>

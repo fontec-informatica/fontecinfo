@@ -5,5 +5,5 @@
 .DS_Store
 Thumbs.db
 
-# Credenciais SMTP (nunca versionar)
-chamados/config_mail.php
+# Credenciais WhatsApp (nunca versionar)
+chamados/config.php
