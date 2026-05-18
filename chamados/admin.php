@@ -37,8 +37,13 @@ function wj(string $f, array $d): void {
 function newEmpId(): string { return 'emp_' . uniqid(); }
 function mailSend(string $to, string $subj, string $html): void {
     $hdr  = "MIME-Version: 1.0\r\nContent-Type: text/html; charset=UTF-8\r\n";
-    $hdr .= "From: FONTEC Suporte <noreply@fontecinfo.com>\r\nReply-To: caio@fontecinfo.com\r\n";
-    @mail($to, '=?UTF-8?B?' . base64_encode($subj) . '?=', $html, $hdr);
+    $hdr .= "From: FONTEC Suporte <caio@fontecinfo.com>\r\nReply-To: caio@fontecinfo.com\r\n";
+    $hdr .= "X-Mailer: FONTEC-Chamados/1.0\r\n";
+    $ok = mail($to, '=?UTF-8?B?' . base64_encode($subj) . '?=', $html, $hdr, '-f caio@fontecinfo.com');
+    if (!$ok) {
+        $log = date('Y-m-d H:i:s') . " [ADMIN] Falha ao enviar para {$to} — {$subj}\n";
+        file_put_contents(__DIR__ . '/data/mail.log', $log, FILE_APPEND | LOCK_EX);
+    }
 }
 function mailTpl(string $title, string $body): string {
     return "<!DOCTYPE html><html><head><meta charset='UTF-8'><style>

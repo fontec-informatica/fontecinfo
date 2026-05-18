@@ -1,6 +1,6 @@
 Options -Indexes
 
-<FilesMatch "\.(json)$">
+<FilesMatch "\.(json|log)$">
     Order Allow,Deny
     Deny from all
 </FilesMatch>
