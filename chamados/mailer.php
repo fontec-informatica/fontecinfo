@@ -3,19 +3,25 @@
 class Mailer {
 
     public function send(string $to, string $subj, string $html): bool {
-        $port  = (int) SMTP_PORT;
-        $proto = ($port === 465) ? 'ssl' : 'tcp';
-        $ctx   = stream_context_create([
-            'ssl' => ['verify_peer' => false, 'verify_peer_name' => false],
-        ]);
+        $port    = (int) SMTP_PORT;
+        $isLocal = in_array(SMTP_HOST, ['localhost', '127.0.0.1']);
 
-        $sock = @stream_socket_client(
-            "{$proto}://" . SMTP_HOST . ":{$port}",
-            $errno, $errstr, 15, STREAM_CLIENT_CONNECT, $ctx
-        );
+        /* ── Conexão ── */
+        if ($isLocal) {
+            $sock = @fsockopen(SMTP_HOST, $port, $errno, $errstr, 10);
+        } else {
+            $proto = ($port === 465) ? 'ssl' : 'tcp';
+            $ctx   = stream_context_create([
+                'ssl' => ['verify_peer' => false, 'verify_peer_name' => false],
+            ]);
+            $sock = @stream_socket_client(
+                "{$proto}://" . SMTP_HOST . ":{$port}",
+                $errno, $errstr, 15, STREAM_CLIENT_CONNECT, $ctx
+            );
+        }
 
         if (!$sock) {
-            $this->log("ERRO conexão {$proto}://" . SMTP_HOST . ":{$port} — [{$errno}] {$errstr}");
+            $this->log("ERRO conexão " . SMTP_HOST . ":{$port} — [{$errno}] {$errstr}");
             return false;
         }
         stream_set_timeout($sock, 15);
@@ -24,8 +30,8 @@ class Mailer {
         $greeting = $this->rd($sock);
         $this->log("S: " . trim($greeting));
 
-        if ($port === 587) {
-            $r = $this->cmd($sock, 'EHLO ' . SMTP_HOST);
+        if (!$isLocal && $port === 587) {
+            $this->cmd($sock, 'EHLO ' . SMTP_HOST);
             $r = $this->cmd($sock, 'STARTTLS');
             if (strpos($r, '220') === false) {
                 $this->log("STARTTLS falhou: " . trim($r));
@@ -35,47 +41,35 @@ class Mailer {
             stream_socket_enable_crypto($sock, true, STREAM_CRYPTO_METHOD_TLS_CLIENT);
         }
 
-        /* ── EHLO — ler capacidades do servidor ── */
         $ehlo = $this->cmd($sock, 'EHLO ' . SMTP_HOST);
-        $this->log("EHLO response: " . trim($ehlo));
+        $this->log("EHLO: " . trim($ehlo));
 
-        /* detectar métodos de autenticação suportados */
-        $supported = [];
-        foreach (explode("\n", $ehlo) as $line) {
-            if (preg_match('/250[- ]AUTH\s+(.+)/i', $line, $m)) {
-                $supported = array_map('trim', explode(' ', strtoupper(trim($m[1]))));
-            }
-        }
-        $this->log("AUTH suportado: " . (empty($supported) ? '(não declarado)' : implode(', ', $supported)));
+        /* ── Autenticação — apenas para servidores remotos ── */
+        if (!$isLocal) {
+            $authenticated = false;
 
-        /* ── Tentar AUTH PLAIN primeiro, depois LOGIN ── */
-        $authenticated = false;
-
-        if (empty($supported) || in_array('PLAIN', $supported)) {
+            /* Tenta AUTH PLAIN */
             $plain = base64_encode("\0" . SMTP_USER . "\0" . SMTP_PASS);
             $auth  = $this->cmd($sock, "AUTH PLAIN {$plain}");
             $this->log("AUTH PLAIN: " . trim($auth));
-            if (strpos($auth, '235') !== false) {
-                $authenticated = true;
-            }
-        }
+            if (strpos($auth, '235') !== false) $authenticated = true;
 
-        if (!$authenticated && (empty($supported) || in_array('LOGIN', $supported))) {
-            $r1 = $this->cmd($sock, 'AUTH LOGIN');
-            $this->log("AUTH LOGIN: " . trim($r1));
-            $r2 = $this->cmd($sock, base64_encode(SMTP_USER));
-            $this->log("USER: " . trim($r2));
-            $auth = $this->cmd($sock, base64_encode(SMTP_PASS));
-            $this->log("PASS: " . trim($auth));
-            if (strpos($auth, '235') !== false) {
-                $authenticated = true;
+            /* Tenta AUTH LOGIN como fallback */
+            if (!$authenticated) {
+                $this->cmd($sock, 'AUTH LOGIN');
+                $this->cmd($sock, base64_encode(SMTP_USER));
+                $auth = $this->cmd($sock, base64_encode(SMTP_PASS));
+                $this->log("AUTH LOGIN: " . trim($auth));
+                if (strpos($auth, '235') !== false) $authenticated = true;
             }
-        }
 
-        if (!$authenticated) {
-            $this->log("ERRO autenticação falhou em todos os métodos tentados");
-            @fclose($sock);
-            return false;
+            if (!$authenticated) {
+                $this->log("ERRO autenticação falhou em ambos os métodos");
+                @fclose($sock);
+                return false;
+            }
+        } else {
+            $this->log("Relay local — autenticação ignorada");
         }
 
         /* ── Envio ── */
