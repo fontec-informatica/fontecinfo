@@ -15,33 +15,78 @@ class Mailer {
         );
 
         if (!$sock) {
-            $this->log("Conexão SMTP falhou: [{$errno}] {$errstr}");
+            $this->log("ERRO conexão {$proto}://" . SMTP_HOST . ":{$port} — [{$errno}] {$errstr}");
             return false;
         }
         stream_set_timeout($sock, 15);
 
-        $this->rd($sock); // saudação do servidor
+        /* ── Handshake ── */
+        $greeting = $this->rd($sock);
+        $this->log("S: " . trim($greeting));
 
         if ($port === 587) {
-            $this->cmd($sock, 'EHLO ' . SMTP_HOST);
-            $this->cmd($sock, 'STARTTLS');
+            $r = $this->cmd($sock, 'EHLO ' . SMTP_HOST);
+            $r = $this->cmd($sock, 'STARTTLS');
+            if (strpos($r, '220') === false) {
+                $this->log("STARTTLS falhou: " . trim($r));
+                @fclose($sock);
+                return false;
+            }
             stream_socket_enable_crypto($sock, true, STREAM_CRYPTO_METHOD_TLS_CLIENT);
         }
 
-        $this->cmd($sock, 'EHLO ' . SMTP_HOST);
-        $this->cmd($sock, 'AUTH LOGIN');
-        $this->cmd($sock, base64_encode(SMTP_USER));
-        $auth = $this->cmd($sock, base64_encode(SMTP_PASS));
+        /* ── EHLO — ler capacidades do servidor ── */
+        $ehlo = $this->cmd($sock, 'EHLO ' . SMTP_HOST);
+        $this->log("EHLO response: " . trim($ehlo));
 
-        if (strpos($auth, '235') === false) {
-            $this->log('Autenticação SMTP falhou: ' . trim($auth));
+        /* detectar métodos de autenticação suportados */
+        $supported = [];
+        foreach (explode("\n", $ehlo) as $line) {
+            if (preg_match('/250[- ]AUTH\s+(.+)/i', $line, $m)) {
+                $supported = array_map('trim', explode(' ', strtoupper(trim($m[1]))));
+            }
+        }
+        $this->log("AUTH suportado: " . (empty($supported) ? '(não declarado)' : implode(', ', $supported)));
+
+        /* ── Tentar AUTH PLAIN primeiro, depois LOGIN ── */
+        $authenticated = false;
+
+        if (empty($supported) || in_array('PLAIN', $supported)) {
+            $plain = base64_encode("\0" . SMTP_USER . "\0" . SMTP_PASS);
+            $auth  = $this->cmd($sock, "AUTH PLAIN {$plain}");
+            $this->log("AUTH PLAIN: " . trim($auth));
+            if (strpos($auth, '235') !== false) {
+                $authenticated = true;
+            }
+        }
+
+        if (!$authenticated && (empty($supported) || in_array('LOGIN', $supported))) {
+            $r1 = $this->cmd($sock, 'AUTH LOGIN');
+            $this->log("AUTH LOGIN: " . trim($r1));
+            $r2 = $this->cmd($sock, base64_encode(SMTP_USER));
+            $this->log("USER: " . trim($r2));
+            $auth = $this->cmd($sock, base64_encode(SMTP_PASS));
+            $this->log("PASS: " . trim($auth));
+            if (strpos($auth, '235') !== false) {
+                $authenticated = true;
+            }
+        }
+
+        if (!$authenticated) {
+            $this->log("ERRO autenticação falhou em todos os métodos tentados");
             @fclose($sock);
             return false;
         }
 
-        $this->cmd($sock, 'MAIL FROM:<' . SMTP_FROM . '>');
-        $this->cmd($sock, "RCPT TO:<{$to}>");
-        $this->cmd($sock, 'DATA');
+        /* ── Envio ── */
+        $r = $this->cmd($sock, 'MAIL FROM:<' . SMTP_FROM . '>');
+        $this->log("MAIL FROM: " . trim($r));
+
+        $r = $this->cmd($sock, "RCPT TO:<{$to}>");
+        $this->log("RCPT TO: " . trim($r));
+
+        $r = $this->cmd($sock, 'DATA');
+        $this->log("DATA: " . trim($r));
 
         $msg  = 'Date: ' . date('r') . "\r\n";
         $msg .= 'From: =?UTF-8?B?' . base64_encode(SMTP_FROM_NAME) . '?= <' . SMTP_FROM . ">\r\n";
@@ -53,15 +98,13 @@ class Mailer {
 
         fwrite($sock, $msg . "\r\n.\r\n");
         $resp = $this->rd($sock);
+        $this->log("BODY resp: " . trim($resp));
 
         $this->cmd($sock, 'QUIT');
         @fclose($sock);
 
         $ok = strpos($resp, '250') !== false;
-        $logMsg = $ok
-            ? "OK — enviado para {$to}"
-            : "FALHA ao enviar para {$to}: " . trim($resp);
-        $this->log($logMsg);
+        $this->log($ok ? "OK — enviado para {$to}" : "FALHA ao enviar para {$to}");
         return $ok;
     }
 
