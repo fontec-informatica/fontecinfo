@@ -1,6 +1,9 @@
 <?php
 session_start();
 
+require_once __DIR__ . '/config_mail.php';
+require_once __DIR__ . '/mailer.php';
+
 /* ── CONFIG ── */
 define('CHAMADOS_FILE', __DIR__ . '/data/chamados.json');
 define('EMPRESAS_FILE', __DIR__ . '/data/empresas.json');
@@ -36,14 +39,7 @@ function wj(string $f, array $d): void {
 }
 function newEmpId(): string { return 'emp_' . uniqid(); }
 function mailSend(string $to, string $subj, string $html): void {
-    $hdr  = "MIME-Version: 1.0\r\nContent-Type: text/html; charset=UTF-8\r\n";
-    $hdr .= "From: FONTEC Suporte <caio@fontecinfo.com>\r\nReply-To: caio@fontecinfo.com\r\n";
-    $hdr .= "X-Mailer: FONTEC-Chamados/1.0\r\n";
-    $ok = mail($to, '=?UTF-8?B?' . base64_encode($subj) . '?=', $html, $hdr, '-f caio@fontecinfo.com');
-    if (!$ok) {
-        $log = date('Y-m-d H:i:s') . " [ADMIN] Falha ao enviar para {$to} — {$subj}\n";
-        file_put_contents(__DIR__ . '/data/mail.log', $log, FILE_APPEND | LOCK_EX);
-    }
+    (new Mailer())->send($to, $subj, $html);
 }
 function mailTpl(string $title, string $body): string {
     return "<!DOCTYPE html><html><head><meta charset='UTF-8'><style>
@@ -99,7 +95,29 @@ $auth = !empty($_SESSION['chm_admin']);
 
 /* ── AÇÕES ── */
 $flash = $flashType = '';
+$testResult = '';
 if ($auth) {
+
+    /* LIMPAR LOG */
+    if (isset($_GET['clear_log'])) {
+        file_put_contents(__DIR__ . '/data/mail.log', '');
+        header('Location: admin.php?page=email_test');
+        exit;
+    }
+
+    /* TESTE DE E-MAIL */
+    if (($_POST['action'] ?? '') === 'test_email' && $_SERVER['REQUEST_METHOD'] === 'POST') {
+        checkCsrf();
+        $destTeste = trim($_POST['dest_teste'] ?? ADMIN_EMAIL);
+        $ok = (new Mailer())->send(
+            $destTeste,
+            'Teste SMTP — FONTEC Chamados',
+            mailTpl('Teste de E-mail', "<p>Este é um e-mail de teste enviado pelo painel admin do sistema de chamados FONTEC.</p><p><strong>Se chegou aqui, o SMTP está funcionando corretamente.</strong></p><p>Hora: " . date('d/m/Y H:i:s') . "</p>")
+        );
+        $testResult = $ok ? 'ok' : 'err';
+        $flash     = $ok ? "E-mail de teste enviado para {$destTeste}. Verifique a caixa de entrada." : 'Falha ao enviar. Verifique as credenciais em config_mail.php e o arquivo data/mail.log.';
+        $flashType = $ok ? 'ok' : 'err';
+    }
 
     /* RESPONDER */
     if (($_POST['action'] ?? '') === 'reply' && $_SERVER['REQUEST_METHOD'] === 'POST') {
@@ -527,6 +545,9 @@ table.data tr:hover td{background:#f8fafc}
     <a href="admin.php?page=empresas" class="nav-item <?= in_array($page,['empresas','empresa_form'])?'active':'' ?>">
       <i class="fa fa-building"></i> Empresas
     </a>
+    <a href="admin.php?page=email_test" class="nav-item <?= $page==='email_test'?'active':'' ?>">
+      <i class="fa fa-envelope-circle-check"></i> Teste de E-mail
+    </a>
     <a href="index.php" target="_blank" class="nav-item">
       <i class="fa fa-arrow-up-right-from-square"></i> Portal Cliente
     </a>
@@ -942,6 +963,68 @@ elseif ($page === 'empresa_form'): ?>
               <?= $editEmp ? 'Salvar Alterações' : 'Cadastrar Empresa' ?>
             </button>
             <a href="admin.php?page=empresas" class="btn-sec"><i class="fa fa-arrow-left"></i> Cancelar</a>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+<?php /* ── TESTE E-MAIL ── */
+elseif ($page === 'email_test'): ?>
+  <div class="page-header">
+    <div class="page-header-left">
+      <h1>Teste de E-mail SMTP</h1>
+      <p>Envie um e-mail de teste para verificar se as configurações estão corretas.</p>
+    </div>
+  </div>
+  <div style="max-width:580px">
+    <div class="card" style="margin-bottom:20px">
+      <div class="card-header"><h2><i class="fa fa-gear" style="margin-right:6px;opacity:.7"></i> Configuração Atual</h2></div>
+      <div class="card-body" style="padding:12px 20px">
+        <div class="info-row"><span class="lbl">Host SMTP</span><span class="val" style="font-family:monospace"><?= h(SMTP_HOST) ?></span></div>
+        <div class="info-row"><span class="lbl">Porta</span><span class="val"><?= h((string)SMTP_PORT) ?> <?= SMTP_PORT===465?'(SSL)':'(TLS/STARTTLS)' ?></span></div>
+        <div class="info-row"><span class="lbl">Usuário</span><span class="val" style="font-family:monospace"><?= h(SMTP_USER) ?></span></div>
+        <div class="info-row"><span class="lbl">Remetente</span><span class="val" style="font-family:monospace"><?= h(SMTP_FROM) ?></span></div>
+        <div class="info-row"><span class="lbl">Senha</span><span class="val"><?= SMTP_PASS === 'SENHA_DO_EMAIL_AQUI' ? '<span style="color:#dc2626;font-weight:700">⚠ Não configurada</span>' : '<span style="color:#059669">● Configurada</span>' ?></span></div>
+      </div>
+    </div>
+    <?php if (SMTP_PASS === 'SENHA_DO_EMAIL_AQUI'): ?>
+    <div class="alert-err" style="margin-bottom:20px">
+      <i class="fa fa-triangle-exclamation"></i>
+      <strong>Senha não configurada.</strong> Edite o arquivo <code>chamados/config_mail.php</code> no servidor e substitua
+      <code>SENHA_DO_EMAIL_AQUI</code> pela senha real do e-mail <strong><?= h(SMTP_USER) ?></strong>.
+    </div>
+    <?php endif ?>
+    <?php if (file_exists(__DIR__ . '/data/mail.log')): ?>
+    <div class="card" style="margin-bottom:20px">
+      <div class="card-header">
+        <h2><i class="fa fa-file-lines" style="margin-right:6px;opacity:.7"></i> Log de E-mails (últimas 30 linhas)</h2>
+        <a href="admin.php?page=email_test&clear_log=1" class="btn-danger" style="font-size:12px;padding:5px 10px"
+           onclick="return confirm('Limpar o log de e-mails?')">
+          <i class="fa fa-trash"></i> Limpar
+        </a>
+      </div>
+      <div class="card-body">
+        <pre style="background:#0f172a;color:#e2e8f0;padding:14px;border-radius:8px;font-size:12px;overflow-x:auto;white-space:pre-wrap;max-height:300px;overflow-y:auto"><?php
+          $logLines = file(__DIR__ . '/data/mail.log');
+          $last30   = array_slice($logLines, -30);
+          echo h(implode('', $last30));
+        ?></pre>
+      </div>
+    </div>
+    <?php endif ?>
+    <div class="card">
+      <div class="card-header"><h2><i class="fa fa-paper-plane" style="margin-right:6px;opacity:.7"></i> Enviar E-mail de Teste</h2></div>
+      <div class="card-body">
+        <form method="post">
+          <input type="hidden" name="csrf"   value="<?= h($csrf) ?>">
+          <input type="hidden" name="action" value="test_email">
+          <div class="form-group">
+            <label>Enviar para</label>
+            <input type="email" name="dest_teste" value="<?= h(ADMIN_EMAIL) ?>" required>
+          </div>
+          <div class="form-actions">
+            <button type="submit" class="btn-send"><i class="fa fa-envelope"></i> Enviar Teste</button>
           </div>
         </form>
       </div>

@@ -4,3 +4,6 @@
 # Sistema
 .DS_Store
 Thumbs.db
+
+# Credenciais SMTP (nunca versionar)
+chamados/config_mail.php

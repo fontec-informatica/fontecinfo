@@ -1,6 +1,9 @@
 <?php
 session_start();
 
+require_once __DIR__ . '/config_mail.php';
+require_once __DIR__ . '/mailer.php';
+
 /* ── CONFIG ── */
 define('CHAMADOS_FILE', __DIR__ . '/data/chamados.json');
 define('EMPRESAS_FILE', __DIR__ . '/data/empresas.json');
@@ -49,14 +52,7 @@ function nextId(array $list, string $pfx, int $pad = 4): string {
     return $pfx . '-' . str_pad($max + 1, $pad, '0', STR_PAD_LEFT);
 }
 function mailSend(string $to, string $subj, string $html): void {
-    $hdr  = "MIME-Version: 1.0\r\nContent-Type: text/html; charset=UTF-8\r\n";
-    $hdr .= "From: FONTEC Chamados <caio@fontecinfo.com>\r\nReply-To: caio@fontecinfo.com\r\n";
-    $hdr .= "X-Mailer: FONTEC-Chamados/1.0\r\n";
-    $ok = mail($to, '=?UTF-8?B?' . base64_encode($subj) . '?=', $html, $hdr, '-f caio@fontecinfo.com');
-    if (!$ok) {
-        $log = date('Y-m-d H:i:s') . " [PORTAL] Falha ao enviar para {$to} — {$subj}\n";
-        file_put_contents(__DIR__ . '/data/mail.log', $log, FILE_APPEND | LOCK_EX);
-    }
+    (new Mailer())->send($to, $subj, $html);
 }
 function mailTpl(string $title, string $body): string {
     return "<!DOCTYPE html><html><head><meta charset='UTF-8'><style>
