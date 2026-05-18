@@ -1,8 +1,6 @@
 <?php
 session_start();
 
-require_once __DIR__ . '/config.php';
-
 /* ── CONFIG ── */
 define('CHAMADOS_FILE', __DIR__ . '/data/chamados.json');
 define('EMPRESAS_FILE', __DIR__ . '/data/empresas.json');
@@ -73,24 +71,6 @@ $auth = !empty($_SESSION['chm_admin']);
 /* ── AÇÕES ── */
 $flash = $flashType = '';
 if ($auth) {
-
-    /* LIMPAR WA LOG */
-    if (isset($_GET['clear_wa_log'])) {
-        file_put_contents(__DIR__ . '/data/wa.log', '');
-        header('Location: admin.php?page=wa_test');
-        exit;
-    }
-
-    /* TESTE WHATSAPP */
-    if (($_POST['action'] ?? '') === 'test_wa' && $_SERVER['REQUEST_METHOD'] === 'POST') {
-        checkCsrf();
-        if (WA_APIKEY === 'APIKEY_AQUI') {
-            $flash = 'Configure a APIKEY em config.php antes de testar.'; $flashType = 'err';
-        } else {
-            sendWhatsApp('Teste FONTEC Chamados — ' . date('d/m/Y H:i:s') . ' — Sistema funcionando!');
-            $flash = 'Mensagem de teste enviada! Verifique o WhatsApp em ' . WA_PHONE . '.'; $flashType = 'ok';
-        }
-    }
 
     /* RESPONDER */
     if (($_POST['action'] ?? '') === 'reply' && $_SERVER['REQUEST_METHOD'] === 'POST') {
@@ -482,9 +462,6 @@ table.data tr:hover td{background:#f8fafc}
     <div class="nav-section">Gestão</div>
     <a href="admin.php?page=empresas" class="nav-item <?= in_array($page,['empresas','empresa_form'])?'active':'' ?>">
       <i class="fa fa-building"></i> Empresas
-    </a>
-    <a href="admin.php?page=wa_test" class="nav-item <?= $page==='wa_test'?'active':'' ?>">
-      <i class="fa-brands fa-whatsapp"></i> WhatsApp
     </a>
     <a href="index.php" target="_blank" class="nav-item">
       <i class="fa fa-arrow-up-right-from-square"></i> Portal Cliente
@@ -900,73 +877,6 @@ elseif ($page === 'empresa_form'): ?>
               <?= $editEmp ? 'Salvar Alterações' : 'Cadastrar Empresa' ?>
             </button>
             <a href="admin.php?page=empresas" class="btn-sec"><i class="fa fa-arrow-left"></i> Cancelar</a>
-          </div>
-        </form>
-      </div>
-    </div>
-  </div>
-
-<?php /* ── WHATSAPP TEST ── */
-elseif ($page === 'wa_test'): ?>
-  <div class="page-header">
-    <div class="page-header-left">
-      <h1>Notificações WhatsApp</h1>
-      <p>Configure e teste o envio de notificações via CallMeBot.</p>
-    </div>
-  </div>
-  <div style="max-width:580px">
-    <div class="card" style="margin-bottom:20px">
-      <div class="card-header"><h2><i class="fa fa-gear" style="margin-right:6px;opacity:.7"></i> Configuração Atual</h2></div>
-      <div class="card-body" style="padding:12px 20px">
-        <div class="info-row"><span class="lbl">Telefone</span><span class="val" style="font-family:monospace"><?= h(WA_PHONE) ?></span></div>
-        <div class="info-row"><span class="lbl">API Key</span><span class="val"><?= WA_APIKEY === 'APIKEY_AQUI' ? '<span style="color:#dc2626;font-weight:700">Não configurada</span>' : '<span style="color:#059669">Configurada</span>' ?></span></div>
-      </div>
-    </div>
-    <?php if (WA_APIKEY === 'APIKEY_AQUI'): ?>
-    <div class="alert-err" style="margin-bottom:20px">
-      <strong>CallMeBot não configurado.</strong> Siga os passos abaixo e edite <code>chamados/config.php</code> no servidor.
-    </div>
-    <div class="card" style="margin-bottom:20px">
-      <div class="card-header"><h2>Como ativar o CallMeBot</h2></div>
-      <div class="card-body">
-        <ol style="font-size:14px;line-height:2;padding-left:18px">
-          <li>Adicione o número <strong>+34 644 33 89 81</strong> na agenda do celular como "CallMeBot".</li>
-          <li>Mande a mensagem exata no WhatsApp: <code style="background:#f1f5f9;padding:2px 6px;border-radius:4px">I allow callmebot to send me messages</code></li>
-          <li>Você receberá uma mensagem com sua <strong>apikey</strong>.</li>
-          <li>No servidor, edite <code>chamados/config.php</code> e preencha <code>WA_PHONE</code> (ex: +5562999998888) e <code>WA_APIKEY</code>.</li>
-        </ol>
-      </div>
-    </div>
-    <?php endif ?>
-    <?php if (file_exists(__DIR__ . '/data/wa.log')): ?>
-    <div class="card" style="margin-bottom:20px">
-      <div class="card-header">
-        <h2><i class="fa fa-file-lines" style="margin-right:6px;opacity:.7"></i> Log WhatsApp (últimas 30 linhas)</h2>
-        <a href="admin.php?page=wa_test&clear_wa_log=1" class="btn-danger" style="font-size:12px;padding:5px 10px"
-           onclick="return confirm('Limpar o log de WhatsApp?')">
-          <i class="fa fa-trash"></i> Limpar
-        </a>
-      </div>
-      <div class="card-body">
-        <pre style="background:#0f172a;color:#e2e8f0;padding:14px;border-radius:8px;font-size:12px;overflow-x:auto;white-space:pre-wrap;max-height:300px;overflow-y:auto"><?php
-          $logLines = file(__DIR__ . '/data/wa.log');
-          $last30   = array_slice($logLines, -30);
-          echo h(implode('', $last30));
-        ?></pre>
-      </div>
-    </div>
-    <?php endif ?>
-    <div class="card">
-      <div class="card-header"><h2><i class="fa-brands fa-whatsapp" style="margin-right:6px;opacity:.7"></i> Enviar Mensagem de Teste</h2></div>
-      <div class="card-body">
-        <form method="post">
-          <input type="hidden" name="csrf"   value="<?= h($csrf) ?>">
-          <input type="hidden" name="action" value="test_wa">
-          <p style="font-size:14px;color:var(--muted);margin-bottom:16px">
-            Envia uma mensagem de teste para <strong><?= h(WA_PHONE) ?></strong> via CallMeBot.
-          </p>
-          <div class="form-actions">
-            <button type="submit" class="btn-send"><i class="fa-brands fa-whatsapp"></i> Enviar Teste</button>
           </div>
         </form>
       </div>

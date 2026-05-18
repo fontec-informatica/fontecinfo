@@ -1,8 +1,6 @@
 <?php
 session_start();
 
-require_once __DIR__ . '/config.php';
-
 /* ── CONFIG ── */
 define('CHAMADOS_FILE', __DIR__ . '/data/chamados.json');
 define('EMPRESAS_FILE', __DIR__ . '/data/empresas.json');
@@ -132,7 +130,6 @@ if ($auth) {
                     'anexos' => $anexos, 'created_at' => $now, 'updated_at' => $now, 'mensagens' => [],
                 ];
                 wj(CHAMADOS_FILE, $all);
-                sendWhatsApp("*Novo Chamado [{$id}]*\nEmpresa: {$emp['nome']}\nContato: {$emp['contato']}\nCategoria: {$cat} | Prioridade: {$prio}\nTitulo: {$titulo}\nAcesse: fontecinfo.com/chamados/admin.php");
                 header("Location: index.php?page=chamado&id={$id}&ok=1");
                 exit;
             }
@@ -152,7 +149,6 @@ if ($auth) {
                     $c['mensagens'][] = ['tipo' => 'empresa', 'autor' => $emp['contato'] ?: $emp['nome'], 'msg' => $msg, 'at' => date('Y-m-d H:i:s')];
                     if ($c['status'] === 'aguardando') $c['status'] = 'em_andamento';
                     $c['updated_at'] = date('Y-m-d H:i:s');
-                    sendWhatsApp("*Resposta em [{$cid}]*\nEmpresa: {$emp['nome']}\nChamado: {$c['titulo']}\nMsg: " . mb_substr($msg, 0, 120));
                     break;
                 }
             }
