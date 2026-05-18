@@ -8,7 +8,6 @@ require_once __DIR__ . '/mailer.php';
 define('CHAMADOS_FILE', __DIR__ . '/data/chamados.json');
 define('EMPRESAS_FILE', __DIR__ . '/data/empresas.json');
 define('UPLOAD_DIR',    __DIR__ . '/uploads/');
-define('ADMIN_EMAIL',   'caio@fontecinfo.com');
 define('SITE_URL',      'https://fontecinfo.com/chamados');
 define('MAX_ATTACH',    5 * 1024 * 1024);
 
