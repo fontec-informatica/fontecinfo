@@ -281,7 +281,7 @@ a:hover{text-decoration:underline}
 .login-logo-wrap img{height:220px;width:auto;object-fit:contain;mix-blend-mode:multiply;flex-shrink:0;pointer-events:none}
 .login-logo-text{display:flex;flex-direction:column;line-height:1.2;text-align:left}
 .login-logo-sub{font-size:.75rem;color:var(--muted);letter-spacing:.04em}
-.login-logo-badge{display:inline-block;font-size:.6rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;background:var(--accent);color:#fff;padding:2px 8px;border-radius:20px;margin-top:4px;width:fit-content}
+.login-logo-badge{display:inline-block;font-size:.6rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;background:var(--accent);color:#fff;padding:2px 8px;border-radius:20px;margin-top:4px;width:fit-content;align-self:flex-start}
 .login-card h2{font-family:'Syne',sans-serif;font-size:1.4rem;font-weight:800;color:var(--text);margin-bottom:6px}
 .login-card>p{font-size:.88rem;color:var(--muted);margin-bottom:28px}
 .login-error{background:rgba(220,38,38,.08);color:#dc2626;border:1px solid rgba(220,38,38,.2);border-radius:var(--radius-sm);padding:10px 14px;font-size:.85rem;margin-bottom:16px}
