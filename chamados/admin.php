@@ -295,7 +295,7 @@ a:hover{text-decoration:underline}
 .layout{display:flex;min-height:100vh}
 .sidebar{width:var(--sidebar-w);background:var(--sidebar);display:flex;flex-direction:column;position:fixed;top:0;left:0;height:100vh;overflow-y:auto;z-index:100;transition:transform .3s}
 .sidebar-logo{padding:20px 20px 16px;border-bottom:1px solid rgba(255,255,255,.07)}
-.sidebar-logo img{height:60px;width:auto;object-fit:contain;filter:brightness(0) invert(1);display:block;margin-bottom:8px;pointer-events:none}
+.sidebar-logo img{height:234px;width:auto;object-fit:contain;filter:brightness(0) invert(1);display:block;margin-bottom:8px;pointer-events:none}
 .sidebar-logo .brand{font-family:'Syne',sans-serif;font-size:15px;font-weight:700;color:rgba(255,255,255,.7);letter-spacing:.03em}
 .sidebar-logo .adm-tag{display:inline-block;background:rgba(34,197,94,.15);color:var(--accent2);border-radius:20px;padding:2px 10px;font-size:10px;font-weight:700;margin-top:6px;letter-spacing:.06em}
 .sidebar-nav{flex:1;padding:12px 0}

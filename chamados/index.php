@@ -219,7 +219,7 @@ a:hover{text-decoration:underline}
 .layout{display:flex;min-height:100vh}
 .sidebar{width:var(--sidebar-w);background:var(--sidebar);display:flex;flex-direction:column;position:fixed;top:0;left:0;height:100vh;overflow-y:auto;z-index:100;transition:transform .3s}
 .sidebar-logo{padding:20px 20px 16px;border-bottom:1px solid rgba(255,255,255,.07)}
-.sidebar-logo img{height:60px;width:auto;object-fit:contain;filter:brightness(0) invert(1);display:block;margin-bottom:8px;pointer-events:none}
+.sidebar-logo img{height:234px;width:auto;object-fit:contain;filter:brightness(0) invert(1);display:block;margin-bottom:8px;pointer-events:none}
 .sidebar-logo .brand{font-family:'Syne',sans-serif;font-size:15px;font-weight:700;color:rgba(255,255,255,.7);letter-spacing:.03em}
 .sidebar-user{padding:14px 20px;border-bottom:1px solid rgba(255,255,255,.07)}
 .sidebar-user .name{font-size:13px;font-weight:600;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
