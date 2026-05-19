@@ -531,20 +531,20 @@ $okMsg   = match($ok) {
     .login-logo-wrap {
       display: flex; align-items: center; justify-content: center; gap: 8px; margin-bottom: 24px;
     }
-    .login-logo-img { height: 70px; overflow: hidden; flex-shrink: 0; }
+    .login-logo-img { height: 70px; overflow: hidden; flex-shrink: 0; display: flex; align-items: center; }
     .login-logo-img img {
-      height: 220px; width: auto; object-fit: contain;
+      height: 220px; width: auto; display: block;
       mix-blend-mode: multiply;
       -webkit-user-drag: none; pointer-events: none;
     }
     [data-theme="dark"] .login-logo-img img { mix-blend-mode: normal; filter: brightness(0) invert(1); }
-    .login-logo-text { display: flex; flex-direction: column; line-height: 1.2; text-align: left; }
-    .login-logo-sub  { font-size: .75rem; color: var(--muted); letter-spacing: .04em; }
+    .login-logo-text { display: flex; flex-direction: column; align-items: center; line-height: 1.2; text-align: center; }
+    .login-logo-sub  { font-size: .75rem; color: var(--muted); letter-spacing: .04em; white-space: nowrap; }
     .login-logo-badge {
       display: inline-block; font-size: .6rem; font-weight: 700;
       letter-spacing: .08em; text-transform: uppercase;
       background: var(--accent); color: #fff;
-      padding: 2px 8px; border-radius: 20px; margin-top: 4px; width: fit-content;
+      padding: 2px 8px; border-radius: 20px; margin-top: 4px; white-space: nowrap;
     }
     .login-card h2 {
       font-family: 'Syne', sans-serif; font-size: 1.4rem; font-weight: 800;
