@@ -443,7 +443,7 @@ table.data tr:hover td{background:var(--bg)}
       </div>
     </div>
     <h2>Painel Administrativo</h2>
-    <p>FONTEC Informática & Tecnologia — acesso restrito</p>
+    <p>Acesso restrito</p>
     <?php if ($loginErr): ?>
     <div class="login-error"><i class="fa fa-exclamation-triangle"></i> <?= h($loginErr) ?></div>
     <?php endif ?>

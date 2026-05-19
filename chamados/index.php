@@ -336,7 +336,7 @@ table.data tr:hover td{background:var(--bg)}
       </div>
     </div>
     <h2>Portal de Chamados</h2>
-    <p>FONTEC Informática & Tecnologia — acesso ao cliente</p>
+    <p>Acesso ao cliente</p>
     <?php if ($loginErr): ?>
     <div class="login-error"><i class="fa fa-circle-exclamation"></i> <?= h($loginErr) ?></div>
     <?php endif ?>
