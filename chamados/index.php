@@ -201,18 +201,27 @@ a:hover{text-decoration:underline}
 .badge{display:inline-block;padding:3px 10px;border-radius:20px;font-size:12px;font-weight:600;white-space:nowrap}
 
 /* ── LOGIN ── */
-.login-wrap{min-height:100vh;display:flex;align-items:center;justify-content:center;background:linear-gradient(135deg,#0b1f14 0%,#1a6b42 100%);padding:20px}
-.login-card{background:#fff;border-radius:var(--radius);padding:40px 36px;width:100%;max-width:420px;box-shadow:0 20px 60px rgba(0,0,0,.3);border:1px solid rgba(26,107,66,.1)}
-.login-logo{text-align:center;margin-bottom:28px}
-.login-logo img{height:90px;width:auto;object-fit:contain;display:block;margin:0 auto 10px}
-.login-logo .sub{font-size:13px;color:var(--muted);margin-top:4px}
+.login-wrap{min-height:100vh;display:flex;align-items:center;justify-content:center;background:linear-gradient(160deg,var(--bg) 0%,var(--bg2) 100%);padding:20px}
+.login-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:48px 40px;width:100%;max-width:420px;box-shadow:0 20px 60px rgba(26,107,66,.12);text-align:center}
+.login-logo-wrap{display:flex;align-items:center;justify-content:center;gap:6px;height:70px;overflow:hidden;margin-bottom:24px}
+.login-logo-wrap img{height:220px;width:auto;object-fit:contain;mix-blend-mode:multiply;flex-shrink:0;pointer-events:none}
+.login-logo-text{display:flex;flex-direction:column;line-height:1.2;text-align:left}
+.login-logo-sub{font-size:.75rem;color:var(--muted);letter-spacing:.04em}
+.login-logo-badge{display:inline-block;font-size:.6rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;background:var(--accent);color:#fff;padding:2px 8px;border-radius:20px;margin-top:4px;width:fit-content}
+.login-card h2{font-family:'Syne',sans-serif;font-size:1.4rem;font-weight:800;color:var(--text);margin-bottom:6px}
+.login-card>p{font-size:.88rem;color:var(--muted);margin-bottom:28px}
+.login-error{background:rgba(220,38,38,.08);color:#dc2626;border:1px solid rgba(220,38,38,.2);border-radius:var(--radius-sm);padding:10px 14px;font-size:.85rem;margin-bottom:16px}
+.field{margin-bottom:16px;text-align:left}
+.field label{display:block;font-size:.82rem;font-weight:600;color:var(--muted);margin-bottom:6px}
+.field input,.field select,.field textarea{width:100%;padding:11px 14px;border:1.5px solid var(--border);border-radius:var(--radius-sm);background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;font-size:.95rem;transition:border-color var(--trans)}
+.field input:focus,.field select:focus,.field textarea:focus{outline:none;border-color:var(--accent)}
 .form-group{margin-bottom:18px}
 .form-group label{display:block;font-size:13px;font-weight:600;color:var(--text);margin-bottom:6px}
-.form-group input,.form-group select,.form-group textarea{width:100%;padding:10px 14px;border:1.5px solid var(--border);border-radius:var(--radius-sm);font-size:14px;font-family:inherit;background:#fff;color:var(--text);transition:border-color .2s}
+.form-group input,.form-group select,.form-group textarea{width:100%;padding:10px 14px;border:1.5px solid var(--border);border-radius:var(--radius-sm);font-size:14px;font-family:inherit;background:var(--bg);color:var(--text);transition:border-color .2s}
 .form-group input:focus,.form-group select:focus,.form-group textarea:focus{outline:none;border-color:var(--accent)}
-.btn-primary{width:100%;padding:12px;background:var(--accent);color:#fff;border:none;border-radius:var(--radius-sm);font-size:15px;font-weight:600;cursor:pointer;font-family:inherit;transition:background .2s}
-.btn-primary:hover{background:#155736}
-.alert-err{background:#fef2f2;border:1px solid #fecaca;color:#dc2626;padding:12px 14px;border-radius:var(--radius-sm);font-size:13px;margin-bottom:18px}
+.btn-primary{width:100%;padding:13px;background:var(--accent);color:#fff;border:none;border-radius:var(--radius-sm);font-family:'DM Sans',sans-serif;font-size:.95rem;font-weight:700;cursor:pointer;transition:background var(--trans),transform var(--trans)}
+.btn-primary:hover{background:var(--accent2);transform:translateY(-1px)}
+.alert-err{background:rgba(220,38,38,.08);border:1px solid rgba(220,38,38,.2);color:#dc2626;padding:12px 14px;border-radius:var(--radius-sm);font-size:13px;margin-bottom:18px}
 .alert-ok{background:#ecfdf5;border:1px solid #a7f3d0;color:#059669;padding:12px 14px;border-radius:var(--radius-sm);font-size:13px;margin-bottom:18px}
 
 /* ── LAYOUT ── */
@@ -319,28 +328,33 @@ table.data tr:hover td{background:var(--bg)}
 <!-- ── LOGIN ── -->
 <div class="login-wrap">
   <div class="login-card">
-    <div class="login-logo">
-      <img src="../assets/img/logo.png?v=2" alt="FONTEC Informática & Tecnologia" />
-      <div class="sub">Portal de Chamados — Clientes</div>
+    <div class="login-logo-wrap">
+      <img src="../assets/img/logo.png?v=2" alt="FONTEC" />
+      <div class="login-logo-text">
+        <span class="login-logo-sub">Portal de Chamados</span>
+        <span class="login-logo-badge">Clientes</span>
+      </div>
     </div>
+    <h2>Portal de Chamados</h2>
+    <p>FONTEC Informática & Tecnologia — acesso ao cliente</p>
     <?php if ($loginErr): ?>
-    <div class="alert-err"><i class="fa fa-circle-exclamation"></i> <?= h($loginErr) ?></div>
+    <div class="login-error"><i class="fa fa-circle-exclamation"></i> <?= h($loginErr) ?></div>
     <?php endif ?>
     <form method="post" autocomplete="on">
-      <div class="form-group">
-        <label>E-mail corporativo</label>
-        <input type="email" name="email" placeholder="empresa@exemplo.com" required autofocus
+      <div class="field">
+        <label for="email">E-mail corporativo</label>
+        <input type="email" id="email" name="email" placeholder="empresa@exemplo.com" required autofocus
                value="<?= h($_POST['email'] ?? '') ?>">
       </div>
-      <div class="form-group">
-        <label>Senha</label>
-        <input type="password" name="senha" placeholder="••••••••" required>
+      <div class="field">
+        <label for="senha">Senha</label>
+        <input type="password" id="senha" name="senha" placeholder="••••••••" required>
       </div>
       <button type="submit" name="do_login" class="btn-primary">
         <i class="fa fa-right-to-bracket"></i> Entrar
       </button>
     </form>
-    <p style="text-align:center;margin-top:20px;font-size:12px;color:#94a3b8">
+    <p style="text-align:center;margin-top:20px;font-size:12px;color:var(--muted)">
       Problemas de acesso? Fale com a FONTEC:<br>
       <a href="mailto:caio@fontecinfo.com">caio@fontecinfo.com</a>
     </p>
