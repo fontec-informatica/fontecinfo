@@ -529,15 +529,15 @@ $okMsg   = match($ok) {
       text-align: center;
     }
     .login-logo-wrap {
-      display: flex; align-items: center; justify-content: center; gap: 6px;
-      height: 70px; overflow: hidden; margin-bottom: 24px;
+      display: flex; align-items: center; justify-content: center; gap: 8px; margin-bottom: 24px;
     }
-    .login-logo-wrap img {
+    .login-logo-img { height: 70px; overflow: hidden; flex-shrink: 0; }
+    .login-logo-img img {
       height: 220px; width: auto; object-fit: contain;
-      mix-blend-mode: multiply; flex-shrink: 0;
+      mix-blend-mode: multiply;
       -webkit-user-drag: none; pointer-events: none;
     }
-    [data-theme="dark"] .login-logo-wrap img { mix-blend-mode: normal; filter: brightness(0) invert(1); }
+    [data-theme="dark"] .login-logo-img img { mix-blend-mode: normal; filter: brightness(0) invert(1); }
     .login-logo-text { display: flex; flex-direction: column; line-height: 1.2; text-align: left; }
     .login-logo-sub  { font-size: .75rem; color: var(--muted); letter-spacing: .04em; }
     .login-logo-badge {
@@ -884,7 +884,7 @@ $okMsg   = match($ok) {
 <div class="login-wrap">
   <div class="login-card">
     <div class="login-logo-wrap">
-      <img src="../assets/img/logo.png?v=2" alt="FONTEC" />
+      <div class="login-logo-img"><img src="../assets/img/logo.png?v=2" alt="FONTEC" /></div>
       <div class="login-logo-text">
         <span class="login-logo-sub">Empreendimentos</span>
         <span class="login-logo-badge">Imóveis Rurais</span>

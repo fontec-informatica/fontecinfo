@@ -277,8 +277,9 @@ a:hover{text-decoration:underline}
 /* ── LOGIN ── */
 .login-wrap{min-height:100vh;display:flex;align-items:center;justify-content:center;background:linear-gradient(160deg,var(--bg) 0%,var(--bg2) 100%);padding:20px}
 .login-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:48px 40px;width:100%;max-width:400px;box-shadow:0 20px 60px rgba(26,107,66,.12);text-align:center}
-.login-logo-wrap{display:flex;align-items:center;justify-content:center;gap:6px;height:70px;overflow:hidden;margin-bottom:24px}
-.login-logo-wrap img{height:220px;width:auto;object-fit:contain;mix-blend-mode:multiply;flex-shrink:0;pointer-events:none}
+.login-logo-wrap{display:flex;align-items:center;justify-content:center;gap:8px;margin-bottom:24px}
+.login-logo-img{height:70px;overflow:hidden;flex-shrink:0}
+.login-logo-img img{height:220px;width:auto;object-fit:contain;mix-blend-mode:multiply;pointer-events:none}
 .login-logo-text{display:flex;flex-direction:column;align-items:flex-start;line-height:1.2;text-align:left;flex-shrink:0}
 .login-logo-sub{font-size:.75rem;color:var(--muted);letter-spacing:.04em;white-space:nowrap}
 .login-logo-badge{display:inline-block;font-size:.6rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;background:var(--accent);color:#fff;padding:2px 8px;border-radius:20px;margin-top:4px;white-space:nowrap;width:auto;max-width:max-content}
@@ -436,7 +437,7 @@ table.data tr:hover td{background:var(--bg)}
 <div class="login-wrap">
   <div class="login-card">
     <div class="login-logo-wrap">
-      <img src="../assets/img/logo.png?v=2" alt="FONTEC" />
+      <div class="login-logo-img"><img src="../assets/img/logo.png?v=2" alt="FONTEC" /></div>
       <div class="login-logo-text">
         <span class="login-logo-sub">Sistema de Chamados</span>
         <span class="login-logo-badge">Portal Admin</span>
