@@ -530,14 +530,14 @@
       padding-right: 0;
     }
     #clientes .section-inner { padding: 0 5%; }
-    .clients-marquee {
+    .clients-carousel {
       overflow: hidden;
       position: relative;
-      padding: 12px 0;
+      padding: 32px 0;
       width: 100%;
     }
-    .clients-marquee::before,
-    .clients-marquee::after {
+    .clients-carousel::before,
+    .clients-carousel::after {
       content: '';
       position: absolute;
       top: 0; bottom: 0;
@@ -545,64 +545,43 @@
       z-index: 2;
       pointer-events: none;
     }
-    .clients-marquee::before {
+    .clients-carousel::before {
       left: 0;
       background: linear-gradient(to right, var(--bg2), transparent);
     }
-    .clients-marquee::after {
+    .clients-carousel::after {
       right: 0;
       background: linear-gradient(to left, var(--bg2), transparent);
     }
     .clients-track {
       display: flex;
-      gap: 14px;
-      width: max-content;
+      align-items: center;
+      gap: 56px;
       will-change: transform;
-      animation: marqueeScroll 35s linear infinite;
-    }
-    .clients-track:hover { animation-play-state: paused; }
-    @keyframes marqueeScroll {
-      from { transform: translateX(0); }
-      to   { transform: translateX(-50%); }
-    }
-    @keyframes logoPop {
-      0%   { transform: scale(1); }
-      40%  { transform: scale(1.1); }
-      70%  { transform: scale(1.05); }
-      100% { transform: scale(1.05); }
     }
     .client-logo {
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: var(--radius);
-      width: 150px;
-      height: 90px;
-      display: flex; align-items: center; justify-content: center;
-      padding: 16px;
       flex-shrink: 0;
-      transition: border-color var(--trans), box-shadow var(--trans), transform var(--trans);
-      position: relative;
-      overflow: visible;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      height: 56px;
     }
     .client-logo img {
       display: block;
-      width: 100%;
-      height: 100%;
+      max-width: 100%;
+      max-height: 100%;
+      width: auto;
+      height: auto;
       object-fit: contain;
-      filter: grayscale(1) opacity(.45);
-      transition: filter .5s ease;
+      filter: grayscale(1) opacity(.5);
+      transition: filter .3s ease;
     }
-    .client-logo.highlight {
-      border-color: var(--accent);
-      box-shadow: 0 0 28px rgba(26,107,66,.25);
-      animation: logoPop .4s cubic-bezier(.4,0,.2,1) forwards;
-      z-index: 2;
-    }
-    .client-logo.highlight img {
+    .client-logo:hover img {
       filter: grayscale(0) opacity(1);
     }
-    .client-logo.lit img {
-      filter: grayscale(0) opacity(1);
+    @media (max-width: 768px) {
+      .clients-track { gap: 32px; }
+      .client-logo { height: 42px; }
     }
 
     /* ── ABOUT (FUNDADOR) ── */
@@ -1241,7 +1220,7 @@
         <p class="section-sub reveal reveal-delay-2">De Anápolis a Goiânia, do Distrito Federal às cidades vizinhas — atendemos empresas e instituições com soluções completas em TI, redes e segurança eletrônica.</p>
       </div>
     </div>
-    <div class="clients-marquee">
+    <div class="clients-carousel">
       <div class="clients-track" id="clientsTrack"></div>
     </div>
   </section>
@@ -1306,7 +1285,7 @@
       localStorage.setItem('fontec-theme', next);
     });
 
-    /* CLIENTS MARQUEE */
+    /* CLIENTS CAROUSEL */
     (function() {
       const logos = [
         { src: 'assets/img/clientes/alive.svg',           alt: 'Alive' },
@@ -1324,61 +1303,89 @@
         { src: 'assets/img/clientes/pequi-futevolei.svg', alt: 'Pequi Futevôlei' },
         { src: 'assets/img/clientes/matao.svg',           alt: 'Matão' },
       ];
-      const shuffled = logos.slice().sort(() => Math.random() - 0.5);
-      const track = document.getElementById('clientsTrack');
-      [...shuffled, ...shuffled].forEach(({ src, alt }) => {
+
+      const track    = document.getElementById('clientsTrack');
+      const carousel = document.querySelector('.clients-carousel');
+      const total    = logos.length;
+      const slidesToScroll  = 2;
+      const autoplaySpeed   = 5000;
+      const transitionSpeed = 500;
+
+      function slidesToShow() {
+        const w = window.innerWidth;
+        if (w <= 640)  return 3;
+        if (w <= 1000) return 4;
+        return 6;
+      }
+
+      function buildSlide({ src, alt }) {
         const div = document.createElement('div');
         div.className = 'client-logo';
         const img = document.createElement('img');
         img.src = src;
         img.alt = alt;
         div.appendChild(img);
-        track.appendChild(div);
-      });
-
-      /* Highlight: 1 por vez via rAF + getBoundingClientRect (funciona com CSS transform) */
-      const marquee = document.querySelector('.clients-marquee');
-      let currentHighlight = null;
-
-      function updateHighlight() {
-        const mRect = marquee.getBoundingClientRect();
-        const center = mRect.left + mRect.width / 2;
-        const logos  = document.querySelectorAll('.client-logo');
-
-        let closest = null;
-        let closestDist = Infinity;
-
-        logos.forEach(logo => {
-          const r = logo.getBoundingClientRect();
-          /* considera só logos visíveis dentro do marquee */
-          if (r.right < mRect.left || r.left > mRect.right) return;
-          const dist = Math.abs((r.left + r.width / 2) - center);
-          if (dist < closestDist) { closestDist = dist; closest = logo; }
-        });
-
-        if (closest !== currentHighlight) {
-          if (currentHighlight) {
-            currentHighlight.classList.remove('highlight');
-            currentHighlight.style.animation = '';
-          }
-          if (closest) closest.classList.add('highlight');
-          currentHighlight = closest;
-        }
-        requestAnimationFrame(updateHighlight);
+        return div;
       }
-      requestAnimationFrame(updateHighlight);
 
-      /* Click: pausa carrossel 1.5s e mantém logo colorida */
-      track.addEventListener('click', (e) => {
-        const card = e.target.closest('.client-logo');
-        if (!card) return;
-        track.style.animationPlayState = 'paused';
-        card.classList.add('lit');
-        setTimeout(() => {
-          track.style.animationPlayState = 'running';
-          card.classList.remove('lit');
-        }, 1500);
+      let index = 0;
+      let slideWidth = 0;
+      let timer = null;
+
+      /* lista real + clones do início suficientes para cobrir 1 avanço, permitindo loop contínuo */
+      function build() {
+        track.innerHTML = '';
+        const extra = logos.slice(0, slidesToShow() + slidesToScroll);
+        [...logos, ...extra].forEach(l => track.appendChild(buildSlide(l)));
+      }
+
+      function measure() {
+        const show  = slidesToShow();
+        const style = getComputedStyle(track);
+        const gap   = parseFloat(style.columnGap || style.gap) || 0;
+        const w     = (carousel.clientWidth - gap * (show - 1)) / show;
+        slideWidth  = w + gap;
+        [...track.children].forEach(el => { el.style.flex = `0 0 ${w}px`; });
+      }
+
+      function goTo(i, animate = true) {
+        track.style.transition = animate ? `transform ${transitionSpeed}ms cubic-bezier(.4,0,.2,1)` : 'none';
+        track.style.transform  = `translateX(-${i * slideWidth}px)`;
+      }
+
+      function next() {
+        index += slidesToScroll;
+        goTo(index);
+        if (index >= total) {
+          /* ao alcançar os clones, volta ao início sem transição (efeito infinito) */
+          setTimeout(() => {
+            index -= total;
+            goTo(index, false);
+          }, transitionSpeed + 20);
+        }
+      }
+
+      function start() { stop(); timer = setInterval(next, autoplaySpeed); }
+      function stop()  { if (timer) clearInterval(timer); }
+
+      function init() {
+        index = 0;
+        build();
+        measure();
+        goTo(0, false);
+      }
+
+      let resizeTimer = null;
+      window.addEventListener('resize', () => {
+        clearTimeout(resizeTimer);
+        resizeTimer = setTimeout(() => { stop(); init(); start(); }, 200);
       });
+
+      carousel.addEventListener('mouseenter', stop);
+      carousel.addEventListener('mouseleave', start);
+
+      init();
+      start();
     })();
 
     /* MOBILE MENU */
